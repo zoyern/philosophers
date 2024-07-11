@@ -15,6 +15,7 @@
 
 # include <sotime/sotime_t.h>
 
-t_sotime	*sonew_time(t_solib *solib);
+t_solib		*sonew_time(t_solib *solib);
+long		getCurrentTimeInMillis();
 
 #endif

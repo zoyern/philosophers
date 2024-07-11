@@ -15,10 +15,13 @@
 
 void	sotime_init(t_sotime *sotime)
 {
-	(void)sotime;
+	sotime->starting_time = 0;
+	sotime->millis = 0;
+	sotime->loop = 0;
+	sotime->current = sotime->starting_time;
 }
 
-t_sotime	*sonew_time(t_solib *solib)
+t_solib	*sonew_time(t_solib *solib)
 {
 	t_sotime	*sotime;
 
@@ -32,5 +35,6 @@ t_sotime	*sonew_time(t_solib *solib)
 	if (!sotime)
 		solib->close(solib, EXIT_FAILURE);
 	sotime_init(sotime);
-	return (sotime);
+	solib->time = sotime;
+	return (solib);
 }

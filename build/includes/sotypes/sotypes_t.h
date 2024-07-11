@@ -6,7 +6,7 @@
 /*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/11 21:27:45 by marvin            #+#    #+#             */
-/*   Updated: 2024/07/05 04:08:59 by marvin           ###   ########.fr       */
+/*   Updated: 2024/07/11 20:06:08 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,6 +24,7 @@ typedef struct s_somemory		t_somemory;
 typedef struct s_somemdata		t_somemdata;
 typedef struct s_sofuncs		t_sofuncs;
 typedef struct s_solibft		t_solibft;
+typedef struct s_sotime			t_sotime;
 typedef struct s_so				t_so;
 
 typedef struct s_somemdata
@@ -60,6 +61,7 @@ typedef struct s_solib
 	int			(*free)(t_solib *solib, void *ptr);
 	int			(*print)(const char *str, ...);
 	t_solibft	*libft;
+	t_sotime	*time;
 	t_so		*so;
 }	t_solib;
 
