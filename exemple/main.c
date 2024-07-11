@@ -11,10 +11,13 @@
 /* ************************************************************************** */
 
 #include "exemple.h"
+#include <stdio.h>
+#include <sys/time.h>
 
-int	philosopher(t_solib *solib)
+int	philosopher(t_solib *solib, char **args)
 {
 	(void)solib;
+	(void)args;
 	return (0);
 }
 
@@ -41,7 +44,7 @@ int	argv_is_numeric(t_solib *solib)
 void	redisplay(t_solib *solib)
 {
 		solib->print("%Cclear()");
-		solib->print("%BFFFFFF( %CFF0000(COUCOU)                                                                                                              \n)");
+		solib->print("%BFFFFFF( %CFF0000(COUCOU)                                                                                                                \n)");
 		solib->print("%BFFFFFF(                                                                                                                       \n)");
 		solib->print("%B543709(                                                                                                                       \n)");
 		solib->print("%B543709(                                                                                                                       \n)");
@@ -56,12 +59,15 @@ void	redisplay(t_solib *solib)
 int	core(t_solib *solib)
 {
 	t_data	*data;
+	struct timeval	start;
+	gettimeofday(&start, NULL);
 
 	data = solib->malloc(solib, sizeof(t_data));
 	data->time = sonew_time(solib);
 	while (1)
 	{
 		redisplay(solib);
+		printf("loopFunc(%d)  time spent: %0.8f sec\n", start.tv_usec);
 	}
 	return (0);
 }
@@ -73,7 +79,9 @@ int	main(int argc, char **argv, char **envp)
 	solib = sonew_libft(sonew_types(argc, argv, envp));
 	if (!solib)
 		return (solib->close(solib, EXIT_FAILURE));
-	if ((solib->env->argc != 3 && solib->env->argc != 4) || !argv_is_numeric(solib))
+	
+	if ((solib->env->argc != 3 && solib->env->argc != 4)
+			|| !argv_is_numeric(solib))
 		return (solib->print("ERROR ARGS\n"));
 	core(solib);
 	return (solib->close(solib, EXIT_SUCCESS));
