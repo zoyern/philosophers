@@ -10,10 +10,14 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef GEARS_H
-# define GEARS_H
+#ifndef TIMERS_H
+# define TIMERS_H
 
 # include <sotime/all.h>
 
+int			sotime_start_timer(t_solib *solib, t_sotimer *timer, long millis);
+t_sotimer	sotime_timer_init(int start);
+void		sonew_timers_list(t_solib *solib);
+t_sotimer	*timer_list_add(t_solib *solib, int start, long millis);	
 
 #endif

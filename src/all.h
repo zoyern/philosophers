@@ -15,5 +15,7 @@
 
 # include <sotime/sotime_t.h>
 # include <sotime.h>
+# include <sotime/gears.h>
+# include <sotime/timers.h>
 
 #endif

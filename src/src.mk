@@ -11,6 +11,7 @@
 # **************************************************************************** #
 
 include src/gears/gears.mk
+include src/timers/timers.mk
 
 SRC_DIR		=	$(CURDIR)/src
 
@@ -19,10 +20,13 @@ SRC_HEADER	=	sotime_t.h all.h
 SRC_FILES	=	sotime.c
 
 DIR			+= $(GEARS_DIR)
+DIR			+= $(TIMERS_DIR)
 
 SRC_HEADER	+= $(GEARS_HEAD)
+SRC_HEADER	+= $(TIMERS_HEAD)
 
 SRC_FILES	+= $(GEARS)
+SRC_FILES	+= $(TIMERS)
 
 HEADERS		=	$(addprefix $(SRC_DIR)/, $(SRC_HEADER))
 SRC			=	$(addprefix $(SRC_DIR)/, $(SRC_FILES))

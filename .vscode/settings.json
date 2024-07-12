@@ -1,5 +1,7 @@
 {
 	"files.associations": {
-		"struct_timeval.h": "c"
+		"struct_timeval.h": "c",
+		"fcntl.h": "c",
+		"all.h": "c"
 	}
 }

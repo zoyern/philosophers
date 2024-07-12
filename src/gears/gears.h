@@ -15,5 +15,10 @@
 
 # include <sotime/all.h>
 
+int			sotime_loop(t_solib *solib, long millis, void *data, int (*callback)());
+void		sotime_update_timer(t_solib *solib, t_sotimer *timer, int passed);
+long		sotime_get_millis();
+void		updating_time(t_solib *solib, int passed);
+t_sotimer	sotime_timer_init(int start);
 
 #endif

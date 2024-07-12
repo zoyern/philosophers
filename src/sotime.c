@@ -12,13 +12,31 @@
 
 #include <sotime/all.h>
 
+int	sotime_close(t_solib *solib, int status)
+{
+	solib->time->stop = 1;
+	if (!solib)
+	{
+		free(solib->time);
+		if (status)
+			exit(status);
+		return (status);
+	}
+	if (status)
+		solib->close(solib, status);
+	return (status);
+}
 
 void	sotime_init(t_sotime *sotime)
 {
 	sotime->starting_time = 0;
 	sotime->millis = 0;
-	sotime->loop = 0;
+	sotime->stop = 1;
 	sotime->current = sotime->starting_time;
+	sotime->loop = sotime_loop;
+	sotime->get_millis = sotime_get_millis;
+	sotime->update = updating_time;
+	sotime->close = sotime_close;
 }
 
 t_solib	*sonew_time(t_solib *solib)
@@ -36,5 +54,6 @@ t_solib	*sonew_time(t_solib *solib)
 		solib->close(solib, EXIT_FAILURE);
 	sotime_init(sotime);
 	solib->time = sotime;
+	sonew_timers_list(solib);
 	return (solib);
 }

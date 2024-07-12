@@ -21,8 +21,11 @@
 
 typedef struct s_data
 {
-	t_sotimer test;
-	t_sotimer test2;
+	int			is_alive;
+	t_sotimer	*eat;
+	t_sotimer	*sleep;
+	t_sotimer	*think;
+	t_sotimer	*dying;
 }	t_data;
 
 long	getCurrentTimeInMillis();
