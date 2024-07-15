@@ -2,6 +2,10 @@
 	"files.associations": {
 		"struct_timeval.h": "c",
 		"fcntl.h": "c",
-		"all.h": "c"
+		"all.h": "c",
+		"sotime.h": "c",
+		"philosophers.h": "c",
+		"types.h": "c",
+		"solibft.h": "c"
 	}
 }

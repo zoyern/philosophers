@@ -14,8 +14,7 @@ include src/src.mk
 include exemple/exemple.mk
 
 #❖═══Setup══════════❖
-NAME		= sotime
-NAME_OUT	= sotime
+NAME		= philosophers
 
 #❖═══Compilation════❖
 CC			= cc
@@ -37,7 +36,8 @@ ALL_B_INCLUDES	= $(BUILD_INCLUDES)/$(NAME)
 #❖═══Libs═══════════❖
 LIBS_DIR			=	libs
 DEPENDENCIES		=	sotypes:https://github.com/zoyern/sotypes.git \
-						solibft:https://github.com/zoyern/solibft.git
+						solibft:https://github.com/zoyern/solibft.git \
+						sotime:https://github.com/zoyern/sotime.git
 LIBRARYS			= 
 LIBS_OBJ			= 
 LIBS_INCLUDES		= 
@@ -58,7 +58,7 @@ $(BUILD_OBJ)/%.o: $(SRC_DIR)/%.c | $(BUILD_INCLUDES)
 $(NAME): $(DEPENDENCIES_RULES) $(OBJ)
 	${AR} $(LIBRARY) ${OBJ} $(LIBRARYS)
 	${LIB} $(LIBRARY)
-	$(CC) $(SRC_EXEMPLE) $(OBJ) -o $(NAME_OUT) $(CFLAG) $(LIBRARYS) $(LIBRARY) $(LDFLAGS)
+	$(CC) $(SRC_EXEMPLE) $(OBJ) -o $(NAME) $(CFLAG) $(LIBRARYS) $(LIBRARY) $(LDFLAGS)
 
 $(BUILD_INCLUDES):
 	mkdir -p $(BUILD_DIR);

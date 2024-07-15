@@ -13,9 +13,7 @@
 #ifndef ALL_H
 # define ALL_H
 
-# include <sotime/sotime_t.h>
-# include <sotime.h>
-# include <sotime/gears.h>
-# include <sotime/timers.h>
+# include <philosophers/types.h>
+# include <philosophers.h>
 
 #endif

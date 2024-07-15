@@ -1,13 +1,20 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   pipe.c                                             :+:      :+:    :+:   */
+/*   so.h                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
+/*   By: almounib <almounib@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/04/07 20:22:09 by marvin            #+#    #+#             */
-/*   Updated: 2024/04/07 20:22:09 by marvin           ###   ########.fr       */
+/*   Created: 2024/02/08 17:59:30 by marvin            #+#    #+#             */
+/*   Updated: 2024/05/16 14:39:01 by almounib         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../exemple.h"
+#ifndef PHILOSOPHERS_H
+# define PHILOSOPHERS_H
+
+# include <philosophers/types.h>
+
+int	philosopher(t_solib *solib, char **args);
+
+#endif

@@ -10,12 +10,8 @@
 #                                                                              #
 # **************************************************************************** #
 
-include exemple/map/map.mk
-
 EXEMPLE_DIR		= $(CURDIR)/exemple
 
 EXEMPLE_FILES	= main.c
-
-EXEMPLE_FILES	+= $(MAP)
 
 SRC_EXEMPLE	= $(addprefix $(EXEMPLE_DIR)/, $(EXEMPLE_FILES))

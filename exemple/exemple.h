@@ -15,19 +15,8 @@
 
 # include <unistd.h>
 # include <stdlib.h>
-# include <fcntl.h>
 # include <solibft.h>
 # include <sotime.h>
-
-typedef struct s_data
-{
-	int			is_alive;
-	t_sotimer	*eat;
-	t_sotimer	*sleep;
-	t_sotimer	*think;
-	t_sotimer	*dying;
-}	t_data;
-
-long	getCurrentTimeInMillis();
+# include <philosophers.h>
 
 #endif
