@@ -46,6 +46,6 @@ int	main(int argc, char **argv, char **envp)
 	solib = sonew_time(solib);
 	if (!solib->time)
 		return (solib->close(solib, EXIT_FAILURE));
-	philosopher(solib, NULL);
+	philosophers(solib, 2);
 	return (solib->close(solib, EXIT_SUCCESS));
 }

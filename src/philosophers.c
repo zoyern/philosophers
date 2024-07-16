@@ -11,35 +11,51 @@
 /* ************************************************************************** */
 
 #include <philosophers/all.h>
+#include <stdio.h>
 
-int	my_update(t_solib *solib, t_data *data, long time)
+void	*philosopher_thread(void *arg)
 {
-	if (!time)
-	{
-		data->dying->start = 1;
-		data->eat->start = solib->print("%d -- eat\n", time);
-	}
-	if (data->eat->finish)
-		data->think->start = solib->print("%d -- think\n", time);
-	if (data->think->finish)
-		data->sleep->start = solib->print("%d -- sleep\n", time);
-	if (data->sleep->finish)
-		data->eat->start = solib->print("%d -- eat\n", time);
-	if (data->dying->finish)
-		solib->time->close(solib, 1);
-	return (0);
+	t_philosopher	*philo;
+
+	philo = (t_philosopher *)arg;
+	printf("Philosopher %d started\n", philo->id);
+	return (NULL);
 }
 
-int	philosopher(t_solib *solib, char **args)
+int	philosophers(t_solib *solib, int nbr_philo)
 {
-	t_data	*data;
+	t_thread_data	data;
+	int				i;
 
-	(void)args;
-	data = solib->malloc(solib, sizeof(t_data));
-	data->eat = solib->time->timers->new(solib, 0, 500);
-	data->think = solib->time->timers->new(solib, 0, 500);
-	data->sleep = solib->time->timers->new(solib, 0, 500);
-	data->dying = solib->time->timers->new(solib, 0, 5000);
-	solib->time->loop(solib, 1, data, my_update);
+	(void)solib;
+	data.philosophers = malloc(nbr_philo * sizeof(t_philosopher));
+	data.forks = malloc(nbr_philo * sizeof(t_fork));
+	data.num_philosophers = nbr_philo;
+	data.threads = malloc(nbr_philo * sizeof(pthread_t));
+	i = 0;
+	while (i < nbr_philo)
+	{
+		data.philosophers[i].id = i;
+		data.philosophers[i].left_fork = &data.forks[i];
+		data.philosophers[i].right_fork = &data.forks[(i + 1) % nbr_philo];
+		pthread_mutex_init(&data.forks[i].mutex, NULL);
+		i++;
+	}
+	i = 0;
+	while (i < nbr_philo)
+	{
+		pthread_create(&data.threads[i], NULL, philosopher_thread,
+			&data.philosophers[i]);
+		i++;
+	}
+	i = 0;
+	while (i < nbr_philo)
+	{
+		pthread_join(data.threads[i], NULL);
+		i++;
+	}
+	free(data.philosophers);
+	free(data.forks);
+	free(data.threads);
 	return (0);
 }

@@ -15,6 +15,7 @@
 
 # include <unistd.h>
 # include <stdlib.h>
+# include <pthread.h>
 # include <sotypes.h>
 # include <solibft.h>
 # include <sotime.h>
@@ -27,5 +28,26 @@ typedef struct s_data
 	t_sotimer	*think;
 	t_sotimer	*dying;
 }	t_data;
+
+typedef struct s_fork
+{
+	int				id;
+	pthread_mutex_t	mutex;
+}	t_fork;
+
+typedef struct s_philosopher
+{
+	int		id;
+	t_fork	*left_fork;
+	t_fork	*right_fork;
+}	t_philosopher;
+
+typedef struct s_thread_data
+{
+	t_philosopher	*philosophers;
+	t_fork			*forks;
+	int				num_philosophers;
+	pthread_t		*threads;
+}	t_thread_data;
 
 #endif
