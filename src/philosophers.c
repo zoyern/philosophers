@@ -13,27 +13,75 @@
 #include <philosophers/all.h>
 #include <stdio.h>
 
-typedef struct s_philo
+int	philo_print(t_soloop *loop, t_philo *philo, char *str, t_sotimer *starting)
 {
-	int			*started;
-	int			id;
-	pthread_t	thread;
-}	t_philo;
+	(void)str;
+	pthread_mutex_lock(philo->death);
+    if (*(philo->is_dead))
+    {
+        pthread_mutex_unlock(philo->death);
+		loop->stop = 1;
+        return (1);
+    }
+	pthread_mutex_unlock(philo->death);
+	pthread_mutex_lock(philo->printable);
+	loop->print("%d %C45ba4d(%d) %Ca7ba45(%s)\n", loop->millis, philo->id, str);
+	pthread_mutex_unlock(philo->printable);
+	if (starting)
+		starting->start = 1;
+	return (0);
+}
 
-typedef struct s_monitor
+int	my_update(t_soloop *loop, t_philo *philo, long time)
 {
-	int		*started;
-	t_solib	*solib;
-	int		nbr_philo;
-	t_philo	**philos;
-}	t_monitor;
+	//printf("%ld\n", time);
+	if (philo->dying->finish)
+	{
+		pthread_mutex_lock(philo->death);
+		pthread_mutex_lock(philo->printable);
+		if (*(philo->is_dead))
+    	{
+        	pthread_mutex_unlock(philo->death);
+			pthread_mutex_unlock(philo->printable);
+			loop->stop = 1;
+       		return (0);
+    	}
+		*philo->is_dead = 1;
+		loop->print("%d %C#45ba4d(%d) %CFF0000(dying !)\n", time, philo->id);
+		pthread_mutex_unlock(philo->death);
+		pthread_mutex_unlock(philo->printable);
+	}
+	if (!time)
+	{
+		if (philo_print(loop, philo, "eat", philo->eat))
+			return (0);
+		philo->dying->start = 1;
+	}
+	if (philo->eat->finish)
+		if (philo_print(loop, philo, "sleep", philo->sleep))
+			return (0);
+	if (philo->sleep->finish)
+	{
+		loop->timers->reset(loop, philo->dying, 1);
+		if (philo_print(loop, philo, "eat", philo->eat))
+			return (0);
+	}
+	return (0);
+}
 
 void	*philosopher_thread(void *arg)
 {
-	t_philosopher	*philo;
+	t_soloop	*loop;
+	t_philo		*philo;
 
-	philo = (t_philosopher *)arg;
-	printf("Philosopher %d started : fork [%d][%d]\n", philo->id, philo->left_fork->id, philo->right_fork->id);
+	philo = (t_philo *)arg;
+	pthread_mutex_lock(philo->started);
+	loop = philo->solib->time->loop(philo->solib);
+	philo->eat = loop->timers->new(loop, 0, 200);
+	philo->sleep = loop->timers->new(loop, 0, 200);
+	philo->dying = loop->timers->new(loop, 0, 800);
+	pthread_mutex_unlock(philo->started);
+	philo->solib->time->start(loop, 1, philo, my_update);
 	return (NULL);
 }
 
@@ -45,8 +93,16 @@ t_monitor	*monitor_init(t_solib *solib, int nbr_philo)
 	monitor = solib->malloc(solib, sizeof(t_monitor));
 	monitor->solib = solib;
 	monitor->nbr_philo = nbr_philo;
-	monitor->started = solib->malloc(solib, sizeof(int));
-	*monitor->started = 0;
+	monitor->started = solib->malloc(solib, sizeof(pthread_mutex_t));
+	monitor->printable = solib->malloc(solib, sizeof(pthread_mutex_t));
+	monitor->death = solib->malloc(solib, sizeof(pthread_mutex_t));
+	monitor->is_dead = solib->malloc(solib, sizeof(int));
+	pthread_mutex_init(monitor->started, NULL);
+	pthread_mutex_init(monitor->printable, NULL);
+	pthread_mutex_init(monitor->death, NULL);
+	pthread_mutex_lock(monitor->started);
+	pthread_mutex_lock(monitor->printable);
+	*monitor->is_dead = 0;
 	monitor->philos = solib->malloc(solib, sizeof(t_philo *) * (nbr_philo + 1));
 	i = 0;
 	while (i < nbr_philo)
@@ -54,6 +110,10 @@ t_monitor	*monitor_init(t_solib *solib, int nbr_philo)
 		monitor->philos[i] = solib->malloc(solib, sizeof(t_philo));
 		monitor->philos[i]->id = i;
 		monitor->philos[i]->started = monitor->started;
+		monitor->philos[i]->printable = monitor->printable;
+		monitor->philos[i]->death = monitor->death;
+		monitor->philos[i]->is_dead = monitor->is_dead;
+		monitor->philos[i]->solib = solib;
 		i++;
 	}
 	monitor->philos[i] = NULL;
@@ -69,54 +129,19 @@ int	philosophers(t_solib *solib, int nbr_philo)
 	i = 0;
 	while (monitor->philos[i])
 	{
-		solib->print("started %d -- id : %d\n", *monitor->philos[i]->started, monitor->philos[i]->id);
+		solib->print("init id : %d\n", monitor->philos[i]->id);
+		pthread_create(&monitor->philos[i]->thread, NULL, philosopher_thread,
+			monitor->philos[i]);
 		i++;
 	}
-	*monitor->started = 1;
-	i = 0;
 	solib->print("-- \t --\n");
+	pthread_mutex_unlock(monitor->started);
+	pthread_mutex_unlock(monitor->printable);
+	i = 0;
 	while (monitor->philos[i])
 	{
-		solib->print("started %d -- id : %d\n", *monitor->philos[i]->started, monitor->philos[i]->id);
+		pthread_join(monitor->philos[i]->thread, NULL);
 		i++;
 	}
 	return (0);
 }
-
-/*int	philosophers(t_solib *solib, int nbr_philo)
-{
-	t_thread_data	data;
-	int				i;
-
-	(void)solib;
-	data.philosophers = malloc(nbr_philo * sizeof(t_philosopher));
-	data.forks = malloc(nbr_philo * sizeof(t_fork));
-	data.num_philosophers = nbr_philo;
-	data.threads = malloc(nbr_philo * sizeof(pthread_t));
-	i = 0;
-	while (i < nbr_philo)
-	{
-		data.philosophers[i].id = i;
-		data.philosophers[i].left_fork = &data.forks[i];
-		data.philosophers[i].right_fork = &data.forks[(i + 1) % nbr_philo];
-		pthread_mutex_init(&data.forks[i].mutex, NULL);
-		i++;
-	}
-	i = 0;
-	while (i < nbr_philo)
-	{
-		pthread_create(&data.threads[i], NULL, philosopher_thread,
-			&data.philosophers[i]);
-		i++;
-	}
-	i = 0;
-	while (i < nbr_philo)
-	{
-		pthread_join(data.threads[i], NULL);
-		i++;
-	}
-	free(data.philosophers);
-	free(data.forks);
-	free(data.threads);
-	return (0);
-}*/

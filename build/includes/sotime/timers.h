@@ -15,9 +15,11 @@
 
 # include <sotime/all.h>
 
-t_sotimer	sotime_timer_init(int start);
-void		sonew_timers_list(t_solib *solib);
-t_sotimer	*timer_list_add(t_solib *solib, int start, long millis);
-void		sotime_update_timer(t_solib *solib, t_sotimer *timer, int passed);
+t_sotimer		sotime_timer_init(int start);
+t_sotimers_list	*sonew_timers_list(t_solib *solib);
+t_sotimer		*timer_list_add(t_soloop *loop, int start, long millis);
+void			timer_list_clear(t_soloop *loop);
+void			sotime_update_timer(t_soloop *loop,
+					t_sotimer *timer, int passed);
 
 #endif

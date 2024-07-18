@@ -41,7 +41,7 @@ fclean :
 val :
 	@make re
 	@clear
-	valgrind --leak-check=full --track-fds=yes --show-leak-kinds=all --trace-children=yes --track-origins=yes ./$(NAME_OUT) assets/maps/min.ber 
+	valgrind --tool=helgrind ./$(NAME) 2
 	@echo ""
 
 check : 
