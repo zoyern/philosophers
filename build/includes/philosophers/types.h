@@ -28,7 +28,7 @@ typedef struct s_philo
 	pthread_t		thread;
 	pthread_mutex_t	*started;
 	pthread_mutex_t	*printable;
-	pthread_mutex_t *death;
+	pthread_mutex_t	*death;
 	t_sotimer		*eat;
 	t_sotimer		*sleep;
 	t_sotimer		*dying;
@@ -41,7 +41,7 @@ typedef struct s_monitor
 	int				nbr_philo;
 	pthread_mutex_t	*started;
 	pthread_mutex_t	*printable;
-	pthread_mutex_t *death;
+	pthread_mutex_t	*death;
 	t_philo			**philos;
 }	t_monitor;
 

@@ -40,9 +40,9 @@ int	main(int argc, char **argv, char **envp)
 	solib = sonew_libft(sonew_types(argc, argv, envp));
 	if (!solib)
 		return (solib->close(solib, EXIT_FAILURE));
-	/*if ((solib->env->argc != 3 && solib->env->argc != 4)
+	if ((solib->env->argc != 3 && solib->env->argc != 4)
 		|| !argv_is_numeric(solib))
-		return (solib->print("ERROR ARGS\n"), 1);*/
+		return (solib->print("ERROR ARGS\n"), 1);
 	solib = sonew_time(solib);
 	if (!solib->time || !solib->env->argc)
 		return (solib->close(solib, EXIT_FAILURE));

@@ -17,12 +17,12 @@ int	philo_print(t_soloop *loop, t_philo *philo, char *str, t_sotimer *starting)
 {
 	(void)str;
 	pthread_mutex_lock(philo->death);
-    if (*(philo->is_dead))
-    {
-        pthread_mutex_unlock(philo->death);
+	if (*(philo->is_dead))
+	{
+		pthread_mutex_unlock(philo->death);
 		loop->stop = 1;
-        return (1);
-    }
+		return (1);
+	}
 	pthread_mutex_unlock(philo->death);
 	pthread_mutex_lock(philo->printable);
 	loop->print("%d %C45ba4d(%d) %Ca7ba45(%s)\n", loop->millis, philo->id, str);
@@ -34,18 +34,17 @@ int	philo_print(t_soloop *loop, t_philo *philo, char *str, t_sotimer *starting)
 
 int	my_update(t_soloop *loop, t_philo *philo, long time)
 {
-	//printf("%ld\n", time);
 	if (philo->dying->finish)
 	{
 		pthread_mutex_lock(philo->death);
 		pthread_mutex_lock(philo->printable);
 		if (*(philo->is_dead))
-    	{
-        	pthread_mutex_unlock(philo->death);
+		{
+			pthread_mutex_unlock(philo->death);
 			pthread_mutex_unlock(philo->printable);
 			loop->stop = 1;
-       		return (0);
-    	}
+			return (0);
+		}
 		*philo->is_dead = 1;
 		loop->print("%d %C#45ba4d(%d) %CFF0000(dying !)\n", time, philo->id);
 		pthread_mutex_unlock(philo->death);
