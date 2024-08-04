@@ -6,6 +6,10 @@
 		"sotime.h": "c",
 		"philosophers.h": "c",
 		"types.h": "c",
-		"solibft.h": "c"
+		"solibft.h": "c",
+		"stdlib.h": "c",
+		"soprintf.h": "c",
+		"gears.h": "c",
+		"timers.h": "c"
 	}
 }

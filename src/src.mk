@@ -10,7 +10,7 @@
 #                                                                              #
 # **************************************************************************** #
 
-include src/gears/gears.mk
+include src/utils/utils.mk
 
 SRC_DIR		=	$(CURDIR)/src
 
@@ -18,11 +18,11 @@ LIB_HEADER	=	$(addprefix $(SRC_DIR)/, philosophers.h)
 SRC_HEADER	=	types.h all.h
 SRC_FILES	=	philosophers.c
 
-DIR			+= $(GEARS_DIR)
+DIR			+= $(UTILS_DIR)
 
-SRC_HEADER	+= $(GEARS_HEAD)
+SRC_HEADER	+= $(UTILS_HEAD)
 
-SRC_FILES	+= $(GEARS)
+SRC_FILES	+= $(UTILS)
 
 HEADERS		=	$(addprefix $(SRC_DIR)/, $(SRC_HEADER))
 SRC			=	$(addprefix $(SRC_DIR)/, $(SRC_FILES))

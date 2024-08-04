@@ -15,6 +15,6 @@
 
 # include <philosophers/types.h>
 
-int	philosophers(t_solib *solib, int nbr_philo);
+int	philosophers(t_solib *solib, int nbr_philo, char **times, int nbr_loop);
 
 #endif

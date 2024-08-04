@@ -19,7 +19,7 @@ NAME		= philosophers
 #❖═══Compilation════❖
 CC			= cc
 CFLAG		= -Wall -Wextra -Werror -I./$(BUILD_INCLUDES) -g -O0
-LDFLAGS 	= 
+LDFLAGS 	= -pthread
 AR			= ar rc
 LIB			= ranlib
 

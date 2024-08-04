@@ -20,29 +20,32 @@
 # include <solibft.h>
 # include <sotime.h>
 
-typedef struct s_philo
+typedef struct s_thread			t_thread;
+typedef struct s_monitor		t_monitor;
+
+typedef struct s_thread
 {
-	t_solib			*solib;
 	int				id;
-	int				*is_dead;
-	pthread_t		thread;
-	pthread_mutex_t	*started;
+	t_monitor		*monitor;
+	t_soloop		*loop;
+	t_sotimer		**times;
+	pthread_t		instance;
 	pthread_mutex_t	*printable;
-	pthread_mutex_t	*death;
-	t_sotimer		*eat;
-	t_sotimer		*sleep;
-	t_sotimer		*dying;
-}	t_philo;
+	pthread_mutex_t	*stoped;
+	pthread_mutex_t	*updating;
+}	t_thread;
 
 typedef struct s_monitor
 {
-	t_solib			*solib;
-	int				*is_dead;
+	t_soloop		*loop;
+	t_thread		**threads;
+	int				nbr_loop;
+	int				current_loop;
 	int				nbr_philo;
-	pthread_mutex_t	*started;
+	char			**times;
 	pthread_mutex_t	*printable;
-	pthread_mutex_t	*death;
-	t_philo			**philos;
+	pthread_mutex_t	*stoped;
+	pthread_mutex_t	*updating;
 }	t_monitor;
 
 #endif
