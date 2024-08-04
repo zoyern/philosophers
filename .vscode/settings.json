@@ -10,6 +10,8 @@
 		"stdlib.h": "c",
 		"soprintf.h": "c",
 		"gears.h": "c",
-		"timers.h": "c"
+		"timers.h": "c",
+		"utils.h": "c",
+		"sostdlib.h": "c"
 	}
 }

@@ -21,7 +21,8 @@ t_monitor	*init_monitor(t_solib *solib, int nbr_philo, char **times, int nbr_loo
 	monitor = solib->malloc(solib, sizeof(t_monitor));
 	monitor->printable = solib->malloc(solib, sizeof(pthread_mutex_t));
 	monitor->stoped = solib->malloc(solib, sizeof(pthread_mutex_t));
-	monitor->updating = solib->malloc(solib, sizeof(pthread_mutex_t));
+	monitor->stop = solib->malloc(solib, sizeof(int));
+	*monitor->stop = 0;
 	monitor->nbr_loop = nbr_loop;
 	monitor->nbr_philo = nbr_philo;
 	monitor->times = times;
@@ -30,7 +31,6 @@ t_monitor	*init_monitor(t_solib *solib, int nbr_philo, char **times, int nbr_loo
 	monitor->current_loop = 0;
 	pthread_mutex_init(monitor->printable, NULL);
 	pthread_mutex_init(monitor->stoped, NULL);
-	pthread_mutex_init(monitor->updating, NULL);
 	pthread_mutex_lock(monitor->printable);
 	pthread_mutex_lock(monitor->stoped);
 	return (monitor);
@@ -38,19 +38,15 @@ t_monitor	*init_monitor(t_solib *solib, int nbr_philo, char **times, int nbr_loo
 
 int		callback_monitor(t_soloop *loop, t_monitor *monitor, long time)
 {
-	pthread_mutex_unlock(monitor->updating);
+	(void)loop;
 	if (!time)
 	{
 		soprintf("unlock\n");
 		pthread_mutex_unlock(monitor->printable);
 		pthread_mutex_unlock(monitor->stoped);
 	}
-	if (monitor->nbr_loop != -1 && monitor->current_loop == monitor->nbr_loop - 1)
-		loop->stop = 1;
-	else
-		monitor->current_loop++;
-	//soprintf("%d\n", time);
-	pthread_mutex_lock(monitor->updating);
+	if (call_mutex(monitor->stoped, mutex_get_int, monitor->stop, NULL))
+		call_mutex(monitor->printable, call_death, NULL, monitor);
 	return (0);
 }
 
@@ -62,14 +58,13 @@ int monitor_update(t_monitor *monitor)
 
 	if (!monitor->loop || !monitor->loop->solib)
 		return (1);
-	sotime_restart_loop(monitor->loop, 1);
-	start = -1;
-	current = 1;
+	start = -monitor->loop->millis_update;
+	current = monitor->loop->millis_update;
 	passed = 0;
 	while (!monitor->loop->stop)
 	{
 		passed = 0;
-		if (current >= 1)
+		if (current >= monitor->loop->millis_update)
 		{
 			passed = 1;
 			if (callback_monitor(monitor->loop, monitor, monitor->loop->millis))

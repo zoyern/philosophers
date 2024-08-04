@@ -24,65 +24,78 @@ t_thread	**init_thread(t_solib *solib, t_monitor *monitor)
 
 	threads = solib->malloc(solib, sizeof(t_thread *) * (monitor->nbr_philo + 1));
 	threads[monitor->nbr_philo] = NULL;
+	sotime_restart_loop(monitor->loop, 1);
 	while (i < monitor->nbr_philo)
 	{
 		threads[i] = solib->malloc(solib, sizeof(t_thread));
 		threads[i]->id = i;
 		threads[i]->monitor = monitor;
 		threads[i]->loop = soloop_init(solib);
+		threads[i]->loop->starting_time = monitor->loop->starting_time;
+		threads[i]->loop->current = monitor->loop->current;
+		threads[i]->loop->millis_update = monitor->loop->millis_update;
+		threads[i]->stop = monitor->stop;
+		threads[i]->nbr_loop = monitor->nbr_loop;
+		threads[i]->need_fork = 1;
 		threads[i]->times = create_timers(solib, threads[i]->loop, monitor->times);
+		threads[i]->times[0]->start = 1;
+		threads[i]->times[1]->start = 1;
+		
 		threads[i]->printable = monitor->printable;
 		threads[i]->stoped = monitor->stoped;
-		threads[i]->updating = monitor->updating;
 		pthread_create(&threads[i]->instance, NULL, thread_update, threads[i]);
 		pthread_detach(threads[i]->instance);
 		i++;
 	}
 	return (threads);
 }
-//mutex_timer_finish
 
-int		callback_thread(t_soloop *loop, t_monitor *monitor, long time)
+// 0 : died
+// 1 : eating
+// 2 : sleep
+
+int		callback_thread(t_soloop *loop, t_thread *thread, long time)
 {
-
+	//call_mutex(thread->printable, print_time, thread);
+	(void)loop;
+	(void)time;
+	if (thread->times[1]->finish)
+		call_mutex(thread->printable, print_sleeping, thread, NULL);
+	if (thread->times[2]->finish)
+		call_mutex(thread->printable, print_thinking, thread, NULL);
+	if (thread->times[0]->finish)
+		call_mutex(thread->printable, call_death, thread, NULL);
 	return (0);
 }
 
 void	*thread_update(void *arg)
 {
 	t_thread	*thread;
+	long		current;
+	long		start;
+	int			passed;
 
 	thread = (t_thread *)arg;
 	//call_mutex(thread->printable, print_init_thread, thread);
-	long	current;
-	long	start;
-	int		passed;
-
 	if (!thread->loop || !thread->loop->solib)
-		return (1);
-	sotime_restart_loop(thread->loop, 1);
-	start = -1;
-	current = 1;
+		return (NULL);
+	start = -thread->loop->millis_update;
+	current = thread->loop->millis_update;
 	passed = 0;
-	while (!thread->loop->stop)
+	while (!thread->loop->stop || !call_mutex(thread->stoped, mutex_get_int, thread->stop, NULL))
 	{
 		passed = 0;
-		if (current >= 1)
+		if (current >= thread->loop->millis_update)
 		{
+			if (!thread->loop->millis)
+				call_mutex(thread->printable, print_fork, thread, NULL);
 			passed = 1;
 			if (callback_thread(thread->loop, thread, thread->loop->millis))
-				return (1);
+				return (NULL);
 			start = thread->loop->millis;
 		}
 		current = thread->loop->millis - start;
 		updating_time(thread->loop, passed);
 	}
-	/*while (!call_mutex(thread->stoped, mutex_get_stop, thread->loop))
-	{
-		// PROBLEMME AVEC MA LIB NECESSITE UN MUTEX POUR CHECK SI FINISH EST DISPONIBLE DONC QUE 
-		// sotime_update_timer ai été executé correctement 
-		call_mutex(thread->updating, mutex_timer_finish, thread->times[1]);
-		call_mutex(thread->updating, mutex_timer_finish, thread->times[0]);
-	}*/
 	return (NULL);
 }

@@ -26,26 +26,28 @@ typedef struct s_monitor		t_monitor;
 typedef struct s_thread
 {
 	int				id;
+	int				need_fork;
+	int				*stop;
+	int				nbr_loop;
 	t_monitor		*monitor;
 	t_soloop		*loop;
 	t_sotimer		**times;
 	pthread_t		instance;
 	pthread_mutex_t	*printable;
 	pthread_mutex_t	*stoped;
-	pthread_mutex_t	*updating;
 }	t_thread;
 
 typedef struct s_monitor
 {
 	t_soloop		*loop;
 	t_thread		**threads;
+	int				*stop;
 	int				nbr_loop;
 	int				current_loop;
 	int				nbr_philo;
 	char			**times;
 	pthread_mutex_t	*printable;
 	pthread_mutex_t	*stoped;
-	pthread_mutex_t	*updating;
 }	t_monitor;
 
 #endif

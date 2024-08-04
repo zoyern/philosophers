@@ -11,6 +11,7 @@
 # **************************************************************************** #
 
 include src/utils/utils.mk
+include src/print/print.mk
 
 SRC_DIR		=	$(CURDIR)/src
 
@@ -19,10 +20,13 @@ SRC_HEADER	=	types.h all.h
 SRC_FILES	=	philosophers.c
 
 DIR			+= $(UTILS_DIR)
+DIR			+= $(PRINT_DIR)
 
 SRC_HEADER	+= $(UTILS_HEAD)
+SRC_HEADER	+= $(PRINT_HEAD)
 
 SRC_FILES	+= $(UTILS)
+SRC_FILES	+= $(PRINT)
 
 HEADERS		=	$(addprefix $(SRC_DIR)/, $(SRC_HEADER))
 SRC			=	$(addprefix $(SRC_DIR)/, $(SRC_FILES))

@@ -21,6 +21,7 @@ int	philosophers(t_solib *solib, int nbr_philo, char **times, int nbr_loop)
 	solib->print("%d %d\n%S-------------------------\n\n",nbr_philo, nbr_loop, times);
 	monitor = init_monitor(solib, nbr_philo, times, nbr_loop);
 	monitor->threads = init_thread(solib, monitor);
+	monitor_update(monitor);
 	//sotime_loop(loop, 1, monitor, monitor_update);
 	//soprintf("%CFF0000(FINISH !!!!! )\n");
 	return (0);

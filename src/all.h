@@ -16,5 +16,6 @@
 # include <philosophers/types.h>
 # include <philosophers.h>
 # include <philosophers/utils.h>
+# include <philosophers/print.h>
 
 #endif

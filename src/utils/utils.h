@@ -15,16 +15,19 @@
 
 # include <philosophers/all.h>
 
-int			mutex_get_stop(t_soloop *loop);
-int			mutex_stop(t_thread *thread);
-int			mutex_timer_finish(t_sotimer *timer);
-int			call_mutex(pthread_mutex_t *mutex, int (*callback)(), void *data);
+//Mutex
+int			call_mutex(pthread_mutex_t *mutex, int (*callback)(), void *data, void *data2);
+int			mutex_get_int(int *value);
+int			call_death(t_thread *thread, t_monitor *monitor);
+int			death_monitor(t_monitor *monitor);
+int			death_thread(t_thread *thread);
+
+// Monitor
 t_monitor	*init_monitor(t_solib *solib, int nbr_philo, char **times, int nbr_loop);
 int			monitor_update(t_monitor *monitor);
+
+//Thread
 t_thread	**init_thread(t_solib *solib, t_monitor *monitor);
 void		*thread_update(void *arg);
-t_sotimer	**create_timers(t_solib *solib, t_soloop *loop, char **strs);
-int			print_init_thread(t_thread *thread);
-int			print_eating(t_thread *thread);
-int			print_time_eating(t_thread *thread);
+
 #endif
