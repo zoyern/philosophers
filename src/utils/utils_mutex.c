@@ -18,14 +18,31 @@ int		mutex_get_int(int *value)
 	return (*value);
 }
 
+int	simul_take_fork(t_thread *thread)
+{
+	soprintf("%Cb59b28(%d)\t| (%C03dffc(%d)) : %Cd62d54(has taken a fork)\n", thread->loop->millis, thread->id);
+	thread->need_fork = 0;
+	return (1);
+}
+
 int	death_thread(t_thread *thread)
 {
 	if (!thread)
 		return (0);
-	if (!*thread->stop && !thread->loop->stop)
-		soprintf("%Cb59b28(%d)\t| (%C03dffc(%d)) : %CFF4500(died)\n", thread->loop->millis, thread->id);
-	*thread->stop = 1;
 	thread->loop->stop = 1;
+	soprintf("hey\n");
+	if (!*thread->stop && check_death_one(thread->life_guard) && thread->nbr_loop)
+		soprintf("%Cb59b28(%d)\t| (%C03dffc(%d)) : %CFF4500(died)\n", thread->loop->millis, thread->id);
+	else
+	{
+		*thread->life_guard[thread->id] = 1;
+		if (check_death_all(thread->life_guard))
+			*thread->stop = 1;
+		return (0);
+	}
+	*thread->stop = 1;
+	*thread->life_guard[thread->id] = 1;
+	soprintf("h----ey\n");
 	return (0);
 }
 

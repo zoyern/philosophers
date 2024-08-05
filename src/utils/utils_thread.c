@@ -37,6 +37,8 @@ t_thread	**init_thread(t_solib *solib, t_monitor *monitor)
 		threads[i]->stop = monitor->stop;
 		threads[i]->nbr_loop = monitor->nbr_loop;
 		threads[i]->need_fork = 1;
+		threads[i]->nbr_philo = monitor->nbr_philo;
+		threads[i]->life_guard = monitor->life_guard;
 		threads[i]->times = create_timers(solib, threads[i]->loop, monitor->times);
 		threads[i]->times[0]->start = 1;
 		threads[i]->times[1]->start = 1;
@@ -50,15 +52,8 @@ t_thread	**init_thread(t_solib *solib, t_monitor *monitor)
 	return (threads);
 }
 
-// 0 : died
-// 1 : eating
-// 2 : sleep
-
-int		callback_thread(t_soloop *loop, t_thread *thread, long time)
+int		callback_thread(t_thread *thread)
 {
-	//call_mutex(thread->printable, print_time, thread);
-	(void)loop;
-	(void)time;
 	if (thread->times[1]->finish)
 		call_mutex(thread->printable, print_sleeping, thread, NULL);
 	if (thread->times[2]->finish)
@@ -88,9 +83,9 @@ void	*thread_update(void *arg)
 		if (current >= thread->loop->millis_update)
 		{
 			if (!thread->loop->millis)
-				call_mutex(thread->printable, print_fork, thread, NULL);
+				call_mutex(thread->printable, print_fork, thread, thread->monitor);
 			passed = 1;
-			if (callback_thread(thread->loop, thread, thread->loop->millis))
+			if (callback_thread(thread))
 				return (NULL);
 			start = thread->loop->millis;
 		}

@@ -24,3 +24,35 @@ int		call_mutex(pthread_mutex_t *mutex, int (*callback)(), void *data, void *dat
 	pthread_mutex_unlock(mutex);
 	return (ret);
 }
+
+int		check_death_all(int **lifeguard)
+{
+	int	i;
+	int	len;
+
+	len = 0;
+	i = 0;
+	while (lifeguard[len])	
+		len++;
+	while (lifeguard[i] && *lifeguard[i])
+		i++;
+	if (i == len)
+		return (1);
+	return (0);
+}
+
+int		check_death_one(int **lifeguard)
+{
+	int	i;
+	int	len;
+
+	len = 0;
+	i = 0;
+	while (lifeguard[len])	
+		len++;
+	while (lifeguard[i] && !*lifeguard[i])
+		i++;
+	if (i == len)
+		return (1);
+	return (0);
+}

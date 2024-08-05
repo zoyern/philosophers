@@ -21,6 +21,9 @@ int			mutex_get_int(int *value);
 int			call_death(t_thread *thread, t_monitor *monitor);
 int			death_monitor(t_monitor *monitor);
 int			death_thread(t_thread *thread);
+int			simul_take_fork(t_thread *thread);
+int			check_death_all(int **lifeguard);
+int			check_death_one(int **lifeguard);
 
 // Monitor
 t_monitor	*init_monitor(t_solib *solib, int nbr_philo, char **times, int nbr_loop);
