@@ -21,7 +21,6 @@ t_thread	**init_thread(t_solib *solib, t_monitor *monitor)
 	int	i;
 
 	i = 0;
-
 	threads = solib->malloc(solib, sizeof(t_thread *) * (monitor->nbr_philo + 1));
 	threads[monitor->nbr_philo] = NULL;
 	sotime_restart_loop(monitor->loop, 1);
@@ -35,16 +34,17 @@ t_thread	**init_thread(t_solib *solib, t_monitor *monitor)
 		threads[i]->loop->current = monitor->loop->current;
 		threads[i]->loop->millis_update = monitor->loop->millis_update;
 		threads[i]->stop = monitor->stop;
+		threads[i]->stape = monitor->stape;
 		threads[i]->nbr_loop = monitor->nbr_loop;
-		threads[i]->need_fork = 1;
+		threads[i]->need_fork = 0;
 		threads[i]->nbr_philo = monitor->nbr_philo;
 		threads[i]->life_guard = monitor->life_guard;
+		threads[i]->acces = monitor->acces;
 		threads[i]->times = create_timers(solib, threads[i]->loop, monitor->times);
 		threads[i]->times[0]->start = 1;
-		threads[i]->times[1]->start = 1;
-		
 		threads[i]->printable = monitor->printable;
 		threads[i]->stoped = monitor->stoped;
+		threads[i]->take = monitor->take;
 		pthread_create(&threads[i]->instance, NULL, thread_update, threads[i]);
 		pthread_detach(threads[i]->instance);
 		i++;
@@ -54,10 +54,14 @@ t_thread	**init_thread(t_solib *solib, t_monitor *monitor)
 
 int		callback_thread(t_thread *thread)
 {
+	if (call_mutex(thread->take, mutex_get_fork, thread, NULL))
+		call_mutex(thread->printable, print_eating, thread, NULL);
 	if (thread->times[1]->finish)
 		call_mutex(thread->printable, print_sleeping, thread, NULL);
 	if (thread->times[2]->finish)
 		call_mutex(thread->printable, print_thinking, thread, NULL);
+	if (thread->need_fork)
+		call_mutex(thread->take, mutex_set_fork, thread, thread->acces);
 	if (thread->times[0]->finish)
 		call_mutex(thread->printable, call_death, thread, NULL);
 	return (0);
@@ -71,19 +75,19 @@ void	*thread_update(void *arg)
 	int			passed;
 
 	thread = (t_thread *)arg;
-	//call_mutex(thread->printable, print_init_thread, thread);
 	if (!thread->loop || !thread->loop->solib)
 		return (NULL);
 	start = -thread->loop->millis_update;
 	current = thread->loop->millis_update;
 	passed = 0;
+	
+	if (call_mutex(thread->take, mutex_get_fork, thread, NULL))
+		call_mutex(thread->printable, print_eating, thread, NULL);
 	while (!thread->loop->stop || !call_mutex(thread->stoped, mutex_get_int, thread->stop, NULL))
 	{
 		passed = 0;
 		if (current >= thread->loop->millis_update)
 		{
-			if (!thread->loop->millis)
-				call_mutex(thread->printable, print_fork, thread, thread->monitor);
 			passed = 1;
 			if (callback_thread(thread))
 				return (NULL);

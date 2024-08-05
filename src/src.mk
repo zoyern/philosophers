@@ -11,7 +11,6 @@
 # **************************************************************************** #
 
 include src/utils/utils.mk
-include src/print/print.mk
 
 SRC_DIR		=	$(CURDIR)/src
 

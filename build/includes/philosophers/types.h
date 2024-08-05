@@ -28,7 +28,9 @@ typedef struct s_thread
 	int				id;
 	int				need_fork;
 	int				*stop;
+	int				*stape;
 	int				**life_guard;
+	int				**acces;
 	int				nbr_loop;
 	int				nbr_philo;
 	t_monitor		*monitor;
@@ -37,6 +39,7 @@ typedef struct s_thread
 	pthread_t		instance;
 	pthread_mutex_t	*printable;
 	pthread_mutex_t	*stoped;
+	pthread_mutex_t	*take;
 }	t_thread;
 
 typedef struct s_monitor
@@ -44,13 +47,16 @@ typedef struct s_monitor
 	t_soloop		*loop;
 	t_thread		**threads;
 	int				*stop;
+	int				*stape;
 	int				**life_guard;
+	int				**acces;
 	int				nbr_loop;
 	int				current_loop;
 	int				nbr_philo;
 	char			**times;
 	pthread_mutex_t	*printable;
 	pthread_mutex_t	*stoped;
+	pthread_mutex_t	*take;
 }	t_monitor;
 
 #endif

@@ -11,17 +11,39 @@
 /* ************************************************************************** */
 
 #include <philosophers/all.h>
-#include <sotypes/soprintf.h>
 
 int		mutex_get_int(int *value)
 {
 	return (*value);
 }
 
-int	simul_take_fork(t_thread *thread)
+int	mutex_set_fork(t_thread *thread, int **value)
 {
-	soprintf("%Cb59b28(%d)\t| (%C03dffc(%d)) : %Cd62d54(has taken a fork)\n", thread->loop->millis, thread->id);
+	*value[thread->id] = 1;
+	*value[(thread->id + 1) % thread->nbr_philo] = 1;
 	thread->need_fork = 0;
+	return (0);
+}
+
+int	update_stape(t_thread *thread)
+{
+	*thread->stape = (*thread->stape + 1) % thread->nbr_philo;
+	return (0);
+}
+
+int	mutex_get_fork(t_thread *thread)
+{
+	if (!*thread->acces[thread->id])
+		return (update_stape(thread));
+	if (!thread->acces[(thread->id + 1) % thread->nbr_philo] || !*thread->acces[(thread->id + 1) % thread->nbr_philo])
+		return (update_stape(thread));
+	*thread->acces[(thread->id + 1) % thread->nbr_philo] = 0;
+	call_mutex(thread->printable, print_fork, thread, NULL);
+	if (!thread->acces[thread->id] || !*thread->acces[thread->id])
+		return (update_stape(thread));
+	*thread->acces[thread->id] = 0;
+	call_mutex(thread->printable, print_fork, thread, NULL);
+	update_stape(thread);
 	return (1);
 }
 
@@ -30,7 +52,6 @@ int	death_thread(t_thread *thread)
 	if (!thread)
 		return (0);
 	thread->loop->stop = 1;
-	soprintf("hey\n");
 	if (!*thread->stop && check_death_one(thread->life_guard) && thread->nbr_loop)
 		soprintf("%Cb59b28(%d)\t| (%C03dffc(%d)) : %CFF4500(died)\n", thread->loop->millis, thread->id);
 	else
@@ -42,7 +63,6 @@ int	death_thread(t_thread *thread)
 	}
 	*thread->stop = 1;
 	*thread->life_guard[thread->id] = 1;
-	soprintf("h----ey\n");
 	return (0);
 }
 

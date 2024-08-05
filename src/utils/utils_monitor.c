@@ -22,17 +22,24 @@ t_monitor	*init_monitor(t_solib *solib, int nbr_philo, char **times, int nbr_loo
 	monitor = solib->malloc(solib, sizeof(t_monitor));
 	monitor->printable = solib->malloc(solib, sizeof(pthread_mutex_t));
 	monitor->stoped = solib->malloc(solib, sizeof(pthread_mutex_t));
+	monitor->take = solib->malloc(solib, sizeof(pthread_mutex_t));
 	monitor->life_guard = solib->malloc(solib, sizeof(int *) * (nbr_philo + 1));
+	monitor->acces = solib->malloc(solib, sizeof(int *) * (nbr_philo + 1));
 	i = 0;
 	while (i < nbr_philo)
 	{
 		monitor->life_guard[i] = solib->malloc(solib, sizeof(int));
 		*monitor->life_guard[i] = 0;
+		monitor->acces[i] = solib->malloc(solib, sizeof(int));
+		*monitor->acces[i] = 1;
 		i++;
 	}
 	monitor->life_guard[i] = NULL;
+	monitor->acces[i] = NULL;
 	monitor->stop = solib->malloc(solib, sizeof(int));
 	*monitor->stop = 0;
+	monitor->stape = solib->malloc(solib, sizeof(int));
+	*monitor->stape = 0;
 	monitor->nbr_loop = nbr_loop;
 	monitor->nbr_philo = nbr_philo;
 	monitor->times = times;
@@ -41,6 +48,7 @@ t_monitor	*init_monitor(t_solib *solib, int nbr_philo, char **times, int nbr_loo
 	monitor->current_loop = 0;
 	pthread_mutex_init(monitor->printable, NULL);
 	pthread_mutex_init(monitor->stoped, NULL);
+	pthread_mutex_init(monitor->take, NULL);
 	pthread_mutex_lock(monitor->printable);
 	pthread_mutex_lock(monitor->stoped);
 	return (monitor);

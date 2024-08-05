@@ -22,7 +22,6 @@ int	philosophers(t_solib *solib, int nbr_philo, char **times, int nbr_loop)
 	monitor = init_monitor(solib, nbr_philo, times, nbr_loop);
 	monitor->threads = init_thread(solib, monitor);
 	monitor_update(monitor);
-	//sotime_loop(loop, 1, monitor, monitor_update);
-	//soprintf("%CFF0000(FINISH !!!!! )\n");
+	soprintf("%Cb59b28(%d)\t| (%C03dffc(MONITOR))\t\t\t: %CFF0000(philosophers has been terminated !)\n", monitor->loop->millis);
 	return (0);
 } 
