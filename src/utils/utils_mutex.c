@@ -17,32 +17,33 @@ int		mutex_get_int(int *value)
 	return (*value);
 }
 
-int	mutex_set_fork(t_thread *thread, int **value)
-{
-	*value[thread->id] = 1;
-	*value[(thread->id + 1) % thread->nbr_philo] = 1;
-	thread->need_fork = 0;
-	return (0);
-}
-
 int	update_stape(t_thread *thread)
 {
 	*thread->stape = (*thread->stape + 1) % thread->nbr_philo;
 	return (0);
 }
 
+
+int	mutex_set_fork(t_thread *thread, int **value)
+{
+	*value[thread->id] = 1;
+	*value[(thread->id + 1) % thread->nbr_philo] = 1;
+	update_stape(thread);
+	return (0);
+}
+
 int	mutex_get_fork(t_thread *thread)
 {
-	if (!*thread->acces[thread->id])
+	if (!*thread->acces[thread->id] || thread->id != *thread->stape)
 		return (update_stape(thread));
 	if (!thread->acces[(thread->id + 1) % thread->nbr_philo] || !*thread->acces[(thread->id + 1) % thread->nbr_philo])
 		return (update_stape(thread));
 	*thread->acces[(thread->id + 1) % thread->nbr_philo] = 0;
-	call_mutex(thread->printable, print_fork, thread, NULL);
+	print_fork(thread);
 	if (!thread->acces[thread->id] || !*thread->acces[thread->id])
 		return (update_stape(thread));
 	*thread->acces[thread->id] = 0;
-	call_mutex(thread->printable, print_fork, thread, NULL);
+	print_fork(thread);
 	update_stape(thread);
 	return (1);
 }
