@@ -44,7 +44,6 @@ int	print_thinking(t_thread *thread)
 int	print_sleeping(t_thread *thread)
 {
 	mutex_set_fork(thread, thread->acces);
-	soprintf("%Cb59b28(%d)\t| (%C03dffc(%d)) : %Cd62d54(is sleeping)\n", thread->loop->millis, thread->id);
 	thread->times[2]->start = 1;
 	return (0);
 }

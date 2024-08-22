@@ -307,7 +307,7 @@ int	threads(t_monitor2 *monitor, int (*callmonitor)(), int (*callthread)(), void
 	return (call_monitor(monitor));
 }
 
-int	philosophers(t_solib *solib, int nbr_philo, char **times, int nbr_loop)
+/*int	philosophers(t_solib *solib, int nbr_philo, char **times, int nbr_loop)
 {
 	t_monitor2	*monitor;
 
@@ -319,4 +319,6 @@ int	philosophers(t_solib *solib, int nbr_philo, char **times, int nbr_loop)
 
 	//soprintf("%Cb59b28(%d)\t| (%C03dffc(MONITOR))\t\t\t: %CFF0000(philosophers has been terminated !)\n", monitor->loop->millis);
 	return (0);
-} 
+}
+*/
+
