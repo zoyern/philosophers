@@ -6,7 +6,7 @@
 /*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/05 01:57:56 by marvin            #+#    #+#             */
-/*   Updated: 2024/08/04 18:23:48 by marvin           ###   ########.fr       */
+/*   Updated: 2024/08/23 20:12:54 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,8 +23,8 @@ void	ft_putchar_len(char c, size_t *len);
 void	ft_putstr_len(char *s, size_t *len);
 void	ft_putstrs_len(char **strs, size_t *len);
 void	ft_putbool_len(int boolean, size_t *len);
-void	ft_putnbr_len(int n, size_t *len);
-void	ft_putnbr_len_base(unsigned int n, char *base, size_t *len);
+void	ft_putnbr_len(long long n, size_t *len);
+void	ft_putnbr_len_base(unsigned long long n, char *base, size_t *len);
 void	ft_putptr_len(unsigned long n, char *base, size_t *len);
 char	*hex_to_ansi(char *hex, int is_background);
 char	*ansi_format(int cc, int is_background);

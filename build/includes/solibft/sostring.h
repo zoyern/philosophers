@@ -33,6 +33,7 @@ size_t	ft_strlen(const char *s);
 char	*ft_strmapi(t_solib *solib,
 			char const *s, char (*f)(unsigned int, char));
 void	ft_strmcat(t_solib *solib, char **dst, char *src);
+int		ft_strcmp(const char *s1, const char *s2);
 int		ft_strncmp(const char *s1, const char *s2, size_t n);
 char	*ft_strnstr(const char *s,	const char *needle, size_t n);
 char	*ft_strrchr(const char *s, int c);

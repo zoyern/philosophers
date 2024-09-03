@@ -15,10 +15,11 @@
 
 # include <solibft/all.h>
 
-int		sonew_stdlib(t_solibft *solibft);
-long	ft_atoi(const char *nptr);
-int		ft_atoi_base(char *str, char *base);
-void	*ft_calloc(t_solib *solib, size_t nmemb, size_t size);
-char	*ft_itoa(t_solib *solib, int n);
+int			sonew_stdlib(t_solibft *solibft);
+long long	ft_atoi(const char *nptr);
+int			ft_atoi_base(char *str, char *base);
+void		*ft_calloc(t_solib *solib, size_t nmemb, size_t size);
+char		*ft_itoa(t_solib *solib, long long n);
+size_t		ft_nbrlen(long long n);
 
 #endif

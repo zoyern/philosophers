@@ -12,91 +12,127 @@
 
 #include "exemple.h"
 #include <stdio.h>
+#include <solibft/sostdlib.h>
 
 
 typedef struct s_philo
 {
 	int				id;
+	int				*stop;
+	int				*alive;
+	long			*millis;
+	long			*starting;
+	char			**times;
+	long			*tasks;
 	pthread_mutex_t	**forks;
 	pthread_mutex_t	*mutex;
 }	t_philo;
 
-int		mutex2(pthread_mutex_t *mutex, int (*callback)(), void *var, void *value)
+long	get_millis(void)
+{
+	struct timeval	time;
+
+	gettimeofday(&time, NULL);
+	return ((time.tv_sec * 1000) + (time.tv_usec / 1000));
+}
+
+
+
+int		mutex2(t_philo *thread, pthread_mutex_t *mutex, int (*callback)(), long *millis)
 {
 	int	ret;
 
 	ret = 0;
 	pthread_mutex_lock(mutex);
+	*millis = get_millis() - *thread->starting;
 	if (callback)
-		ret = callback(var, value);
+		ret = callback(thread);
 	pthread_mutex_unlock(mutex);
 	return (ret);
 }
 
 int	print_takefork(t_philo *thread)
 {
-	soprintf("%Cb59b28(%d)\t| (%C03dffc(%d)) : %Cd62d54(has taken a fork)\n", 0, thread->id);
-	return (0);
-}
-
-int	print_eating2(t_philo *thread)
-{
-	soprintf("%Cb59b28(%d)\t| (%C03dffc(%d)) : %Cd62d54(is eating)\n", 0, thread->id);
+	//thread->lastoc = get_millis();
+	soprintf("%Cb59b28(%lld)\t| (%C03dffc(%d)) : %Cd62d54(has taken a fork)\n", *thread->millis, thread->id);
+	soprintf("%Cb59b28(%lld)\t| (%C03dffc(%d)) : %Cd62d54(has taken a fork)\n", *thread->millis, thread->id);
+	soprintf("%Cb59b28(%lld)\t| (%C03dffc(%d)) : %Cd62d54(is eating)\n", *thread->millis, thread->id);
+	thread->tasks[1] = *thread->millis + (ft_atoi(thread->times[1]));
+	thread->tasks[0] = *thread->millis + (ft_atoi(thread->times[0]));
 	return (0);
 }
 
 int	print_sleeping2(t_philo *thread)
 {
-	soprintf("%Cb59b28(%d)\t| (%C03dffc(%d)) : %Cd62d54(is sleeping)\n", 0, thread->id);
+	soprintf("%Cb59b28(%lld)\t| (%C03dffc(%d)) : %Cd62d54(is sleeping)\n", *thread->millis, thread->id);
+	thread->tasks[2] = *thread->millis + (ft_atoi(thread->times[2]));
 	return (0);
 }
 
 int	print_thinking2(t_philo *thread)
 {
-	soprintf("%Cb59b28(%d)\t| (%C03dffc(%d)) : %Cd62d54(is thinking)\n", 0, thread->id);
+	soprintf("%Cb59b28(%lld)\t| (%C03dffc(%d)) : %Cd62d54(is thinking)\n", *thread->millis, thread->id);
 	return (0);
 }
 
-int	redem_fork(t_philo *thread)
+int	wait_task(t_philo *thread, int id)
 {
-	pthread_mutex_unlock(thread->forks[0]);
-	pthread_mutex_unlock(thread->forks[1]);
-	return (0);
-}
-
-int	takefork_mine(t_philo *thread)
-{
-	pthread_mutex_lock(thread->forks[0]);
-	mutex2(thread->mutex, print_takefork, thread, NULL);
+	while (1)
+	{
+		pthread_mutex_lock(thread->mutex);
+		// return si death
+		if (*thread->millis >= thread->tasks[id])
+			return (pthread_mutex_unlock(thread->mutex), 0);
+		pthread_mutex_unlock(thread->mutex);
+	}
 	return (0);
 }
 
 int	takefork_other(t_philo *thread)
 {
+	// je bloque une fouchette
+	pthread_mutex_lock(thread->forks[0]);
+	 // je bloque une deuxieme fourchette
 	pthread_mutex_lock(thread->forks[1]);
-	takefork_mine(thread);
-	mutex2(thread->mutex, print_takefork, thread, NULL);
+	// je verifie si je ne suis pas mort 
+	// je print que j'ai pris 2 fourchette donc je mange donc je start le chrono de eat
+	mutex2(thread, thread->mutex, print_takefork, thread->millis);
+	if (wait_task(thread, 1)) // verifie si mort 1
+		return (1); // redonne les fourchette et close car mort
+	mutex2(thread, thread->mutex, print_sleeping2, thread->millis); // print sleep et start sleep
+	if (wait_task(thread, 2))
+		return (1); // redonne les fourchette et close car mort
+	pthread_mutex_unlock(thread->forks[0]); // unlock les fourchette
+	pthread_mutex_unlock(thread->forks[1]);	// unlock les fourchette
+	// attend pour print permet de laisser le temps pour qu'il ne reprennent pas de suite une fourchette
+	mutex2(thread, thread->mutex, print_thinking2, thread->millis); 
 	return (0);
 }
 
 void* thread_function(void* arg)
 {
     t_philo *thread = (t_philo *)arg;  // Cast de l'argument en entier
-	if (thread->id)
-		mutex2(thread->mutex, NULL, NULL, NULL);
+
 	while (1)
-	{
-		takefork_other(thread);//takefork(thread->id, thread->forks[0]);
-		mutex2(thread->mutex, print_eating2, thread, NULL);
-		usleep(2000 * 1000);
-		mutex2(thread->mutex, print_sleeping2, thread, NULL);
-		usleep(2000 * 1000);
-		mutex2(thread->mutex, print_thinking2, thread, NULL);
-		pthread_mutex_unlock(thread->forks[0]);
-		pthread_mutex_unlock(thread->forks[1]);
-	}
-    // Simule du travail en mettant en pause le thread pendant 1 seconde
+		takefork_other(thread);
     return NULL;
+}
+
+long	*create_tasks(char **times)
+{
+	long	*tasks;
+	long	len;
+	long	i;
+
+	len = 0;
+	while (times[len])
+		len++;
+	tasks = malloc(sizeof(long) * (len));
+	i = 0;
+	tasks[i] = ft_atoi(times[i]);
+	while (++i < len)
+			tasks[i] = 0;
+	return (tasks);
 }
 
 int	philosophers(t_solib *solib, int nbr_philo, char **times, int nbr_loop)
@@ -104,37 +140,60 @@ int	philosophers(t_solib *solib, int nbr_philo, char **times, int nbr_loop)
 	solib->print("%d %d\n%S-------------------------\n\n",nbr_philo, nbr_loop, times);
 	
 	pthread_t threads[nbr_philo];  // Tableau pour stocker les identifiants des threads
-    
-    int i = 0;
+    long	*starting = malloc(sizeof(long));
+	long	*millis = malloc(sizeof(long));
+	int		*stop = malloc(sizeof(int));
+	*stop = 0;
+    int i = -1;
+	*millis = 0;
     pthread_mutex_t	**forks = malloc(sizeof(pthread_mutex_t *) * (nbr_philo + 1));
-	while (i < nbr_philo)
+	forks[nbr_philo] = NULL;
+    int				**peacemaker = malloc(sizeof(int *) * (nbr_philo + 1));
+	peacemaker[nbr_philo] = NULL;
+	while (++i < nbr_philo)
 	{
 		forks[i] = malloc(sizeof(pthread_mutex_t));
 		pthread_mutex_init(forks[i], NULL);
-		i++;
 	}
-	i = 0;
     // Créer N threads
 	pthread_mutex_t *mutex = malloc(sizeof(pthread_mutex_t));
 	pthread_mutex_init(mutex, NULL);
 	pthread_mutex_lock(mutex);
-	printf("hey`\n");
+	i = 0;
     while (i < nbr_philo)
     {
 		t_philo *thread = malloc(sizeof(t_philo));
 		thread->id = i;
+		thread->stop = stop;
 		thread->mutex = mutex;
+		thread->millis = millis;
+		thread->times = times;
+		thread->starting = starting;
 		thread->forks = malloc(sizeof(pthread_mutex_t *) * 2);
+		thread->alive = malloc(sizeof(int));
+		*thread->alive = 1;
+		peacemaker[i] = thread->alive;
 		thread->forks[0] = forks[i];
 		thread->forks[1] = forks[(i + 1) % nbr_philo];
+		thread->tasks = create_tasks(times);
         if (pthread_create(&threads[i], NULL, thread_function, thread))
         {
             fprintf(stderr, "Erreur de création de thread %d\n", i);
             return 1;
         }
+		else
+			pthread_detach(threads[i]);
         i++;
     }
+	*starting = get_millis();
     pthread_mutex_unlock(mutex);
+	while (1)
+	{
+		pthread_mutex_lock(mutex);
+		*millis = get_millis() - *starting;
+		pthread_mutex_unlock(mutex);
+	}
+	
     i = 0;
     
     // Attendre la fin des N threads
@@ -147,7 +206,7 @@ int	philosophers(t_solib *solib, int nbr_philo, char **times, int nbr_loop)
         }
         i++;
     }
-	soprintf("%Cb59b28(%d)\t| (%C03dffc(MONITOR))\t\t\t: %CFF0000(philosophers has been terminated !)\n", 0);
+	soprintf("%Cb59b28(%lld)\t| (%C03dffc(MONITOR))\t\t\t: %CFF0000(philosophers has been terminated !)\n", 0);
 	return (0);
 }
 
