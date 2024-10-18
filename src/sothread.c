@@ -131,6 +131,8 @@ t_sync	*thread_sync(t_solib *solib, void *data, int lock, t_sync *cpsync)
 	sync = somalloc(solib, sizeof(t_sync));
 	sync->data = data;
 	sync->work = somalloc(solib, sizeof(int));
+	sync->value = somalloc(solib, sizeof(int));
+	*sync->value = 0;
 	if (!cpsync)
 	{
 		sync->id = -1;
@@ -210,7 +212,7 @@ t_thread	*new_thread(t_solib *solib,  int (*condition)() , int (*routine)(), t_s
 	thread->sync = sync;
 	thread->id = sync->id;
 	thread->data = sync->data;
-	thread->value = 0;
+	thread->value = sync->value;
 	*thread->alive = 1;
 	thread->millis = sync->millis;
 	thread->routine = routine;
