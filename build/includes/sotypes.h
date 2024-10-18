@@ -6,7 +6,7 @@
 /*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/08 17:59:30 by marvin            #+#    #+#             */
-/*   Updated: 2024/08/04 18:23:55 by marvin           ###   ########.fr       */
+/*   Updated: 2024/09/28 20:21:18 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,5 +20,8 @@ void	*somalloc(t_solib *solib, size_t size);
 int		sofree(t_solib *solib, void *ptr);
 int		solib_close(t_solib *solib, int status);
 int		soprintf(const char *str, ...);
+int		soprintf_fd(int fd, const char *str, ...);
+char	*soprintf_get(t_solib *solib, const char *str, ...);
+int		solib_close(t_solib *solib, int status);
 
 #endif

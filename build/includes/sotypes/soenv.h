@@ -16,5 +16,6 @@
 # include <sotypes/all.h>
 
 void	sonew_env(t_solib *solib, int argc, char **argv, char **envp);
+char	*soenv_strdup(t_solib *solib, const char *s);
 
 #endif

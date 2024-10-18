@@ -6,7 +6,7 @@
 /*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/11 21:32:42 by marvin            #+#    #+#             */
-/*   Updated: 2024/07/07 19:02:27 by marvin           ###   ########.fr       */
+/*   Updated: 2024/09/26 21:27:07 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,5 +18,8 @@
 # include <sotypes/somemory.h>
 # include <sotypes/soenv.h>
 # include <sotypes/soprintf.h>
+# include <sotypes/solib_utils.h>
+
+int	solib_close(t_solib *solib, int status);
 
 #endif

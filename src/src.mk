@@ -10,21 +10,17 @@
 #                                                                              #
 # **************************************************************************** #
 
-include src/utils/utils.mk
 
 SRC_DIR		=	$(CURDIR)/src
 
-LIB_HEADER	=	$(addprefix $(SRC_DIR)/, philosophers.h)
-SRC_HEADER	=	types.h all.h
-SRC_FILES	=	philosophers.c
+LIB_HEADER	=	$(addprefix $(SRC_DIR)/, sothread.h)
+SRC_HEADER	=	sothread_t.h all.h
+SRC_FILES	=	sothread.c
 
-DIR			+= $(UTILS_DIR)
 DIR			+= $(PRINT_DIR)
 
-SRC_HEADER	+= $(UTILS_HEAD)
 SRC_HEADER	+= $(PRINT_HEAD)
 
-SRC_FILES	+= $(UTILS)
 SRC_FILES	+= $(PRINT)
 
 HEADERS		=	$(addprefix $(SRC_DIR)/, $(SRC_HEADER))

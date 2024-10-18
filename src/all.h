@@ -13,8 +13,7 @@
 #ifndef ALL_H
 # define ALL_H
 
-# include <philosophers/types.h>
-# include <philosophers.h>
-# include <philosophers/utils.h>
+# include <sothread/sothread_t.h>
+# include <sothread.h>
 
 #endif

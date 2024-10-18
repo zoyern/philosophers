@@ -16,7 +16,6 @@
 # include <unistd.h>
 # include <stdlib.h>
 # include <solibft.h>
-# include <sotime.h>
-# include <philosophers.h>
+# include <sothread.h>
 
 #endif

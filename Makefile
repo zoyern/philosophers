@@ -15,14 +15,9 @@ include build.mk
 #❖═════Commandes══════❖
 all : $(NAME)
 
-start :
-	@make re
-	@make clear
-	@./$(NAME) $(ARGS)
-
 clear :
 	@clear
-	@echo "42Paris : $(NAME)"
+	@echo "42Paris : $(PROG_NAME)"
 	@echo ""
 
 clean : clear
@@ -30,24 +25,24 @@ clean : clear
 	@echo "Clean   : *.o in build !"
 
 fclean :
-	@rm -f $(NAME)
+	@rm -f $(PROG_NAME)
 	@rm -rf minilibx-linux
 	@rm -rf build/includes/mlx.h
 	@rm -rf libs
 	@rm -rf build/obj/
-	@echo "Clean   : ./$(NAME)"
+	@echo "Clean   : ./$(PROG_NAME)"
 
 
 val :
 	@make re
 	@clear
-	valgrind --tool=helgrind ./$(NAME) 2
+	valgrind --tool=helgrind ./$(PROG_NAME) 1 2000 20 20
 	@echo ""
 
 check : 
 	@make re
 	@clear
-	funcheck -o ./$(NAME) $(ARGS)
+	funcheck -o ./$(PROG_NAME) $(ARGS)
 	@echo ""
 
 MLX_GIT = https://github.com/42Paris/minilibx-linux.git;
