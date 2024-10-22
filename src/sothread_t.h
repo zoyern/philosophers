@@ -67,9 +67,6 @@ typedef struct s_thread
 
 typedef struct s_pswp		t_pswp;
 typedef struct s_philo		t_philo;
-typedef struct s_sotask		t_sotask;
-typedef struct s_pswp_stack	t_pswp_stack;
-
 
 typedef struct s_thread {
     pthread_t thread;
@@ -82,42 +79,4 @@ typedef struct s_thread {
     int start;
 } t_thread;
 
-
-typedef struct s_sotask
-{
-	unsigned long	id;
-	long			time;
-	int				start;
-	int				work;
-	int				end;
-	t_sotask		*next;
-	void			*data;
-	int				(*callback)();
-}	t_sotask;
-
-typedef struct s_sotasks
-{
-	int			loop;
-    int 		count;
-	long		starting;
-	t_sotask	*current;
-	t_sotask	*first;
-}	t_sotasks;
-
-
-typedef struct s_task6 {
-    int id;
-    int loop;
-    int count;
-    struct s_task *next;
-    int (*callback)(void *);
-} t_task6;
-
-typedef struct s_task7 {
-    int id;
-    int loop_count;
-    int max_loops;
-    struct s_task *next;
-    int (*callback)(void *);
-} t_task7;
 #endif

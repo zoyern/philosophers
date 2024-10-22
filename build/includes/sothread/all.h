@@ -15,6 +15,5 @@
 
 # include <sothread/sothread_t.h>
 # include <sothread.h>
-# include <sothread/sotask.h>
 
 #endif

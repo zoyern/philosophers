@@ -15,6 +15,7 @@
 
 # include <unistd.h>
 # include <stdlib.h>
+# include <sotypes.h>
 # include <solibft.h>
 # include <sothread.h>
 

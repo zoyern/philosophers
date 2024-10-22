@@ -152,27 +152,39 @@ t_philo	*new_philo(t_solib *solib, int nbr_loop)
 
 	philo = somalloc(solib, sizeof(t_philo));
 	philo->loop = nbr_loop;
-	philo->tasks = sonew_tasklist(solib);
+	philo->tasks = sotask_list(solib);
 	return (philo);
 }
 
+int	get_time(long current, long *starting, long last)
+{
+	long	millis;
+
+	millis = current - *starting;
+	if (millis - last > 1)
+		return (*starting += millis - last,
+			(millis -= (millis - last) + 1), millis);
+	return (millis);
+}
 
 int philosophers(t_solib *solib, int nbr, char **times, int nbr_loop) {
 
 	t_philo	*philo;
 	long	starting;
+	long	millis;
 	
 	(void)nbr;
 	philo = new_philo(solib, nbr_loop);
-	add_task(philo->tasks, 0, sonew_task(solib, times[1], task_print, philo));
-	add_task(philo->tasks, 1, sonew_task(solib, times[2], task_print, philo));
-	add_task(philo->tasks, 2, sonew_task(solib, times[3], task_print, philo));
+	sotask_add(philo->tasks, 0, sonew_task(solib, times[1], task_print, philo));
+	sotask_add(philo->tasks, 1, sonew_task(solib, times[2], task_print, philo));
+	sotask_add(philo->tasks, 2, sonew_task(solib, times[3], task_print, philo));
 	
-
+	millis = 0;
 	starting = get_millis();
-	while (philo->tasks->loop < 7)
+	while (philo->tasks->loop < 5)
 	{
-		if (sotask(starting - get_millis(), philo->tasks, NULL))
+		millis = get_time(get_millis(), &starting, millis);
+		if (sotask(millis, philo->tasks, NULL))
 			soprintf("%C#FF0000(tasks finished)\n");
 	}
 	soprintf("finished task nbr: %d loop : %d\n", philo->tasks->count, philo->tasks->loop);

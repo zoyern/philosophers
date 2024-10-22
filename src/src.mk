@@ -10,8 +10,6 @@
 #                                                                              #
 # **************************************************************************** #
 
-include $(CURDIR)/src/sotask/sotask.mk
-
 SRC_DIR		=	$(CURDIR)/src
 
 LIB_HEADER	=	$(addprefix $(SRC_DIR)/, sothread.h)

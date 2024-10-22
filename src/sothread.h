@@ -17,10 +17,6 @@
 
 
 long		get_millis(void);
-t_sotasks	*sonew_tasklist(t_solib *solib);
-t_sotask	*sonew_task(t_solib *solib, char *time, int (*callback)(), void *data);
-void		add_task(t_sotasks *list, unsigned long id, t_sotask *task);
-int			sotask(long time, t_sotasks *tasks, void *data);
 /*
 int	sothread(void);
 int	sof(int f2, int func, int f1);

@@ -13,7 +13,11 @@
 #ifndef SOTASK_H
 # define SOTASK_H
 
-# include <sothread/all.h>
+# include <sotypes/all.h>
 
+void	sotask_change_state(t_sotask *sotask, int start, int work, int end);
+void	sotask_start(long time, t_sotasks *tasks, void *data);
+void	sotask_work(long time, t_sotasks *tasks, void *data);
+int		sotask_end(long time, t_sotasks *tasks, void *data);
 
 #endif
