@@ -15,6 +15,13 @@
 
 # include <sothread/sothread_t.h>
 
+
+long		get_millis(void);
+t_sotasks	*sonew_tasklist(t_solib *solib);
+t_sotask	*sonew_task(t_solib *solib, char *time, int (*callback)(), void *data);
+void		add_task(t_sotasks *list, unsigned long id, t_sotask *task);
+int			sotask(long time, t_sotasks *tasks, void *data);
+/*
 int	sothread(void);
 int	sof(int f2, int func, int f1);
 int	mutlock(t_mutex *mutex);
@@ -27,5 +34,5 @@ long	get_millis(void);
 t_sync	*thread_sync(t_solib *solib, void *data, int lock, t_sync *cpsync);
 int	thread_kill(t_thread *thread);
 t_thread	*new_threads(t_solib *solib,  int nbr, int syncro, t_thread *cpthread);
-
+*/
 #endif

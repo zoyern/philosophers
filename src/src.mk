@@ -10,6 +10,7 @@
 #                                                                              #
 # **************************************************************************** #
 
+include $(CURDIR)/src/sotask/sotask.mk
 
 SRC_DIR		=	$(CURDIR)/src
 
@@ -17,11 +18,11 @@ LIB_HEADER	=	$(addprefix $(SRC_DIR)/, sothread.h)
 SRC_HEADER	=	sothread_t.h all.h
 SRC_FILES	=	sothread.c
 
-DIR			+= $(PRINT_DIR)
+DIR			+= $(SOTASK_DIR)
 
-SRC_HEADER	+= $(PRINT_HEAD)
+SRC_HEADER	+= $(SOTASK_HEAD)
 
-SRC_FILES	+= $(PRINT)
+SRC_FILES	+= $(SOTASK)
 
 HEADERS		=	$(addprefix $(SRC_DIR)/, $(SRC_HEADER))
 SRC			=	$(addprefix $(SRC_DIR)/, $(SRC_FILES))

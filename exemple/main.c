@@ -13,7 +13,7 @@
 #include "exemple.h"
 #include <stdio.h>
 #include <solibft/sostdlib.h>
-
+/*
 typedef struct s_philo
 {
     int				value;
@@ -25,7 +25,6 @@ typedef struct s_philo
 
 int	thread_timeout(t_thread *thread, t_philo *philo)
 {
-	sof(mutend(thread->sync->print), soprintf("%p -- %p -- %p\n", thread->sync->time, thread->sync->start, philo->times), mutlock(thread->sync->print));
 	if (sof(mutend(thread->sync->time), 
 		*thread->millis >= (long)sof(mutend(thread->sync->start), (long)ft_atoi(philo->times[0]), mutlock(thread->sync->start)),
 		mutlock(thread->sync->time)))
@@ -73,44 +72,115 @@ int	philosophers(t_solib *solib, int nbr, char **times, int nbr_loop)
 	(void)nbr_loop;
 	soprintf("%s t !\n", times[0]);
 	philo = new_philo(solib, times, nbr_loop);
-	thread = new_thread(solib, start, routine, thread_sync(solib, philo, 0, NULL));
-	/*thread = new_threads(solib, nbr, 1,
-			new_thread(solib, start, routine, thread_sync(solib, philo, 1, NULL)));*/
+	//thread = new_thread(solib, start, routine, thread_sync(solib, philo, 0, NULL));
+	thread = new_threads(solib, nbr, 1,
+			new_thread(solib, start, routine, thread_sync(solib, philo, 1, NULL)));
+	(void)thread;
+	while (1)
+	{
+		continue;
+	}
 	
-	ret = wait_thread(thread, 1);
+	//ret = wait_thread(thread, 1);
 	soprintf("finished return : %d -- value : %d\n", ret, philo->value);
 	//status = wait_thread(thread, 1);
-	/*new_threads(nbr, 2, routine, data);
+	new_threads(nbr, 2, routine, data);
     syncro(new_threads(solib, routine, philo, nbr), &philo->stop);
-    wait_threads(solib, new_threads(solib, routine, philo), watcher, philo);*/
+    wait_threads(solib, new_threads(solib, routine, philo), watcher, philo);
 	return (0);
 }
 
 
 
+*/
+typedef struct s_philo {
+    int id;
+    int has_eaten;
+	int	loop;
+    int forks_taken;
+    long time;
+	t_sotasks	*tasks;
+} t_philo;
+
+//----------------------------------------------
+/*
+{pthread_mutex_lock(mutex->instance), mutex->lock = 1)
+	return (mutex->lock = 0, pthread_mutex_unlock(mutex->instance));
+int	mutex(t_mutex *mutex, int (*callback)(), void *data)
+{
+	mutex_lock(mutex);
+	if (callback)
+		callback(data);
+	mutex_unlock(mutex);
+}
 
 
 
+int	sotask(long time, t_task *task, void *data)
+{	
+	// verifie la premiere  task avec time execute le callback donné avec la data et si la task est fini le notifier avec task_print et si ca a fait un tour complet le notifier aussi d'une maniere ou une autre
+}
+
+int	routine(t_tread *thread, t_philo *philo) // this is while 1 but blocked if cant eat (fork not accesible)
+{
+	if (sotask(time, philo->task, thread))
+		return (1) // arret du programme en mode erreur 
+}
+
+*/
+
+int	task_print(long time, t_sotask *task)
+{
+	if (task->id == 0 && task->start)
+		soprintf("%ld task eat started\n", time);
+	if (task->id == 0 && task->end)
+		soprintf("%ld task eat end\n", time);
+	if (task->id == 1 && task->start)
+		soprintf("%ld task sleep started\n", time);
+	if (task->id == 1 && task->end)
+		soprintf("%ld task sleep end\n", time);
+	if (task->id == 2 && task->start)
+		soprintf("%ld task think started\n", time);
+	if (task->id == 2 && task->end)
+		soprintf("%ld task think end\n", time);
+	return (0);
+}
+
+t_philo	*new_philo(t_solib *solib, int nbr_loop)
+{
+	t_philo	*philo;
+
+	philo = somalloc(solib, sizeof(t_philo));
+	philo->loop = nbr_loop;
+	philo->tasks = sonew_tasklist(solib);
+	return (philo);
+}
 
 
-// temps to die = timeout fork = syncro evité d'épuisé la memoire trop vite double ( comprendre le system de rendement pour des double et voir si on peux faire des triple ou autre)
+int philosophers(t_solib *solib, int nbr, char **times, int nbr_loop) {
 
+	t_philo	*philo;
+	long	starting;
+	
+	(void)nbr;
+	philo = new_philo(solib, nbr_loop);
+	add_task(philo->tasks, 0, sonew_task(solib, times[1], task_print, philo));
+	add_task(philo->tasks, 1, sonew_task(solib, times[2], task_print, philo));
+	add_task(philo->tasks, 2, sonew_task(solib, times[3], task_print, philo));
+	
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+	starting = get_millis();
+	while (philo->tasks->loop < 7)
+	{
+		if (sotask(starting - get_millis(), philo->tasks, NULL))
+			soprintf("%C#FF0000(tasks finished)\n");
+	}
+	soprintf("finished task nbr: %d loop : %d\n", philo->tasks->count, philo->tasks->loop);
+	/*t_threads *threads = sothreads(solib, nbr, 2, routine);
+	mutex(threads->print, print_helloworld, NULL);*/
+	//wait_threads(threads, 1 /*blocked (permet de dire si on veux juste executer vite fais pour avoir une valeur de retour pendant l'execution du thread par exemple ou en es le programme ou si on veux bloquer le programme en attente d'une fin total des threads)*/, callback_watch /*recuperer les derniere donné et peux renvoyer un int en fonction du callback*/, philo)
+	return (0);
+}
 //-----------------------------------------------------
 
 

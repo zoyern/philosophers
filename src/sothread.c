@@ -25,6 +25,16 @@ long	get_millis(void)
 	return ((time.tv_sec * 1000) + (time.tv_usec / 1000));
 }
 
+/*
+
+long	get_millis(void)
+{
+	struct timeval	time;
+
+	gettimeofday(&time, NULL);
+	return ((time.tv_sec * 1000) + (time.tv_usec / 1000));
+}
+
 int	sof(int f2, int func, int f1)
 {
 	return ((void)f2, (void)f1, func);
@@ -233,3 +243,5 @@ int	wait_thread(t_thread *thread, int blocked)
 		continue;
 	return (sof(mutend(thread->sync->die), *thread->value, mutlock(thread->sync->die)));
 }
+*/
+
