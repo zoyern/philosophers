@@ -17,6 +17,17 @@ int	sothread(void)
 	return (0);
 }
 
+long	correct_time(long current, long *starting, long last)
+{
+	long	millis;
+
+	millis = current - *starting;
+	if (millis - last > 1)
+		return (*starting += millis - last,
+			(millis -= (millis - last) + 1), millis);
+	return (millis);
+}
+
 long	get_millis(void)
 {
 	struct timeval	time;

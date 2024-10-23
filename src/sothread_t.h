@@ -68,15 +68,27 @@ typedef struct s_thread
 typedef struct s_pswp		t_pswp;
 typedef struct s_philo		t_philo;
 
-typedef struct s_thread {
-    pthread_t thread;
-    t_solib *solib;
-    int sync;
-    t_philo *philo;
-	long time;
-    pthread_mutex_t *print;
-    pthread_mutex_t *forks;
-    int start;
+typedef struct s_thread
+{
+    t_solib			*solib;
+	pthread_t		thread;
+	int				id;
+	void			*data;
+	int				(*callback)();
+    pthread_mutex_t	*print;
+    pthread_mutex_t	*forks;
+    pthread_mutex_t	*acces;
 } t_thread;
+
+typedef struct s_table {
+    t_solib			*solib;
+	int				nbr;
+	int				sync;
+	void			*data;
+	int				(*callback)();
+	int				value;
+	pthread_mutex_t	*print;
+    pthread_mutex_t	*acces;
+} t_table;
 
 #endif

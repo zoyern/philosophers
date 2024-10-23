@@ -73,7 +73,7 @@ typedef struct s_thread {
     t_solib *solib;
     int sync;
     t_philo *philo;
-	long time;
+	long die;
     pthread_mutex_t *print;
     pthread_mutex_t *forks;
     int start;

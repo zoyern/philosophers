@@ -129,6 +129,11 @@ int	routine(t_tread *thread, t_philo *philo) // this is while 1 but blocked if c
 
 */
 
+int	routine(t_thread *thread, t_philo *philo)
+{
+	return (0);
+}
+
 int	task_print(long time, t_sotask *task)
 {
 	if (task->id == 0 && task->start)
@@ -156,17 +161,6 @@ t_philo	*new_philo(t_solib *solib, int nbr_loop)
 	return (philo);
 }
 
-int	get_time(long current, long *starting, long last)
-{
-	long	millis;
-
-	millis = current - *starting;
-	if (millis - last > 1)
-		return (*starting += millis - last,
-			(millis -= (millis - last) + 1), millis);
-	return (millis);
-}
-
 int philosophers(t_solib *solib, int nbr, char **times, int nbr_loop) {
 
 	t_philo	*philo;
@@ -183,7 +177,7 @@ int philosophers(t_solib *solib, int nbr, char **times, int nbr_loop) {
 	starting = get_millis();
 	while (philo->tasks->loop < 5)
 	{
-		millis = get_time(get_millis(), &starting, millis);
+		millis = correct_time(get_millis(), &starting, millis);
 		if (sotask(millis, philo->tasks, NULL))
 			soprintf("%C#FF0000(tasks finished)\n");
 	}

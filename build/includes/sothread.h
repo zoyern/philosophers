@@ -17,6 +17,7 @@
 
 
 long		get_millis(void);
+long		correct_time(long current, long *starting, long last);
 /*
 int	sothread(void);
 int	sof(int f2, int func, int f1);
