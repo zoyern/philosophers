@@ -12,11 +12,6 @@
 
 #include <sothread/all.h>
 
-int	sothread(void)
-{
-	return (0);
-}
-
 long	correct_time(long current, long *starting, long last)
 {
 	long	millis;

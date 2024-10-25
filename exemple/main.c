@@ -179,13 +179,16 @@ int	print_think_end(long time, t_sotask *task)
 }
 
 
-t_philo	*new_philo(t_solib *solib, int nbr_loop)
+t_philo	*new_philo(t_solib *solib, int nbr_loop, char **times)
 {
 	t_philo	*philo;
 
 	philo = somalloc(solib, sizeof(t_philo));
 	philo->loop = nbr_loop;
 	philo->tasks = sotask_list(solib);
+	sotask_add(philo->tasks, 0, sonew_task(solib, times[1], sofuncs(print_eat_start, NULL, print_eat_end), philo));
+	sotask_add(philo->tasks, 1, sonew_task(solib, times[2], sofuncs(print_sleep_start, NULL, print_sleep_end), philo));
+	sotask_add(philo->tasks, 2, sonew_task(solib, times[3], sofuncs(print_think_start, NULL, print_think_end), philo));
 	return (philo);
 }
 
@@ -213,6 +216,8 @@ t_sothsync	*sothsync(t_solib *solib, int nbr, int syncro)
 	t_sothsync	*sync;
 
 	sync = somalloc(solib, sizeof(t_sothsync));
+	sync->threads = somalloc(solib, sizeof(t_sothread *) * (nbr + 1));
+	sync->threads[nbr] = NULL;
 	sync->print = somalloc(solib, sizeof(pthread_mutex_t));
 	sync->acces = somalloc(solib, sizeof(pthread_mutex_t));
 	sync->millis = somalloc(NULL, sizeof(long));
@@ -230,72 +235,73 @@ t_sothsync	*sothsync(t_solib *solib, int nbr, int syncro)
 	return (sync);
 }
 
-t_sothread	*sonew_thread()
+t_sothread	*sonew_thread(t_sothsync *sync, long timeout, int (*callback)(), void *data)
 {
+	t_sothread	*thread;
 
+	if (!sync)
+		return (NULL);
+	thread = somalloc(sync->solib, sizeof(t_sothread));
+	thread->solib = sync->solib;
+	thread->id = 0;
+	thread->timeout = timeout;
+	thread->data = data;
+	thread->callback = callback;
+	thread->millis = sync->millis;
+	thread->print = sync->print;
+	thread->acces = sync->acces;
+	return (thread);
 }
 
-t_sothsync	*sothread(t_solib *solib, long timeout, int (*callback)(), void *data)
+t_sothsync	*sothread(t_solib *solib, char *timeout, int (*callback)(), void *data)
 {
 	t_sothsync	*sync;
 	
 	sync = sothsync(solib, 1, 1);
-	sync->threads
-	
-}
-/*
-t_sothread	*sonew_thread(t_sothsync *sync)
-{
-
+	sync->threads[0] = sonew_thread(sync, ft_atoi(timeout), callback, data);
+	//lunch thread
+	return (sync);
 }
 
-t_sothsync	*sothread()
+t_sothsync	*sothreads(t_sothsync *sync, char *timeout, int (*callback)(), void *data)
 {
-
-}
-
-t_sothsync	*sothreads(int nbr, int syncro, t_sofuncs funcs, void *data)
-{
-	t_sothread	**threads;
 	int	i;
 
+	if (!sync)
+		return (NULL);
 	i = -1;
-	while (++i > nbr)
+	while (++i < sync->nbr)
 	{
-		threads[i] = sonew_thread()
+		sync->threads[i] = sonew_thread(sync, ft_atoi(timeout), callback, data);
+		// detach
 	}
-	
-}*/
+	return (sync);
+}
 
 int philosophers(t_solib *solib, int nbr, char **times, int nbr_loop) {
 
 	t_philo		*philo;
 	t_sothsync	*sync;
+	t_sothsync	*syncs;
 	
-	(void)nbr;
+
+	// t_sothsync	*sothsync(t_solib *solib, int nbr, int syncro);
+	// t_sothsync	*sothread(t_solib *solib, long timeout, int (*callback)(), void *data);
+	// t_sothsync	*sothreads(t_sothsync *sync, long timeout, int (*callback)(), void *data);
+	philo = new_philo(solib, nbr_loop, times);
+	sync = sothread(solib, times[0], routine, philo);
+	//syncs = sothreads(sothsync(solib, nbr, 2), times[0], routine, philo);
 	(void)sync;
-	(void)times;
-	(void)nbr_loop;
-	(void)philo;
-	/*philo = new_philo(solib, nbr_loop);
-	sotask_add(philo->tasks, 0, sonew_task(solib, times[1], sofuncs(print_eat_start, NULL, print_eat_end), philo));
-	sotask_add(philo->tasks, 1, sonew_task(solib, times[2], sofuncs(print_sleep_start, NULL, print_sleep_end), philo));
-	sotask_add(philo->tasks, 2, sonew_task(solib, times[3], sofuncs(print_think_start, NULL, print_think_end), philo));
-	
-	sync = sothreads(nbr, 2, funcs(NULL, NULL, NULL), philo);
-	*/
-	/*sync = sothread(solib, times[0] ,routine, philo);
-	sync = sothreads(solib, t_sothread ,routine, philo);*/
-	sync = sothsync(solib, 1, 1);
-	pthread_mutex_unlock(sync->acces);
+	(void)syncs;
+	(void)nbr;
+
+	//pthread_mutex_unlock(sync->acces);
 	while (1)
 	{
 		continue;
 	}
 	
 	soprintf("finished task nbr: %d loop : %d\n", philo->tasks->count, philo->tasks->loop);
-	/*t_threads *threads = sothreads(solib, nbr, 2, routine);
-	mutex(threads->print, print_helloworld, NULL);*/
 	//wait_threads(threads, 1 /*blocked (permet de dire si on veux juste executer vite fais pour avoir une valeur de retour pendant l'execution du thread par exemple ou en es le programme ou si on veux bloquer le programme en attente d'une fin total des threads)*/, callback_watch /*recuperer les derniere donné et peux renvoyer un int en fonction du callback*/, philo)
 	return (0);
 }

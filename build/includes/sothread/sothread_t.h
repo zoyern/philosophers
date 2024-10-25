@@ -27,11 +27,12 @@ typedef struct s_sothread {
     t_solib         *solib;
     pthread_t       instance;
     int             id;
-    long            death;     // Temps avant la mort du philosophe
+    long            timeout;     // Temps avant la mort du philosophe
     void            *data;     // Données spécifiques à l'utilisateur (philosophe)
     int             (*callback)(struct s_sothread *, void *); // Routine du thread
 	long			*millis;
-    t_sothsync      *sync;     // Pointeur vers la structure de synchronisation
+	pthread_mutex_t *print;     // Mutex pour l'affichage
+    pthread_mutex_t *acces;     // Mutex pour protéger l'accès aux ressources partagées
 } t_sothread;
 
 typedef struct s_sothsync {
@@ -44,7 +45,6 @@ typedef struct s_sothsync {
 	t_sothread		**threads;
     pthread_mutex_t *print;     // Mutex pour l'affichage
     pthread_mutex_t *acces;     // Mutex pour protéger l'accès aux ressources partagées
-    pthread_mutex_t *forks;    // Tableau de mutex pour les fourchettes
 } t_sothsync;
 
 #endif
