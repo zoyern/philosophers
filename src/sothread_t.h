@@ -29,7 +29,7 @@ typedef struct s_sothread {
     int             id;
     long            timeout;     // Temps avant la mort du philosophe
     void            *data;     // Données spécifiques à l'utilisateur (philosophe)
-    int             (*callback)(struct s_sothread *, void *); // Routine du thread
+    int             (*callback)(); // Routine du thread
 	long			*millis;
 	pthread_mutex_t *print;     // Mutex pour l'affichage
     pthread_mutex_t *acces;     // Mutex pour protéger l'accès aux ressources partagées

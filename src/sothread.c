@@ -16,10 +16,11 @@ long	correct_time(long current, long *starting, long last)
 {
 	long	millis;
 
+	(void)last;
 	millis = current - *starting;
-	if (millis - last > 1)
+	/*if (millis - last > 1)
 		return (*starting += millis - last,
-			(millis -= (millis - last) + 1), millis);
+			(millis -= (millis - last) + 1), millis);*/
 	return (millis);
 }
 

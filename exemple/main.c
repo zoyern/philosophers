@@ -96,38 +96,41 @@ typedef struct s_philo {
 	t_sotasks	*tasks;
 } t_philo;
 
-//----------------------------------------------
-/*
-{pthread_mutex_lock(mutex->instance), mutex->lock = 1)
-	return (mutex->lock = 0, pthread_mutex_unlock(mutex->instance));
-int	mutex(t_mutex *mutex, int (*callback)(), void *data)
-{
-	mutex_lock(mutex);
-	if (callback)
-		callback(data);
-	mutex_unlock(mutex);
-}
 
-
-
-int	sotask(long time, t_task *task, void *data)
-{	
-	// verifie la premiere  task avec time execute le callback donné avec la data et si la task est fini le notifier avec task_print et si ca a fait un tour complet le notifier aussi d'une maniere ou une autre
-}
-
-int	routine(t_tread *thread, t_philo *philo) // this is while 1 but blocked if cant eat (fork not accesible)
-{
-	if (sotask(time, philo->task, thread))
-		return (1) // arret du programme en mode erreur 
-}
-
-*/
 
 int	routine(t_sothread *thread, t_philo *philo)
 {
 	(void)thread;
 	(void)philo;
+	pthread_mutex_lock(thread->acces);
+	pthread_mutex_lock(thread->print);
+	soprintf("millis : %ld\n", *thread->millis);
+	pthread_mutex_unlock(thread->print);
+	pthread_mutex_unlock(thread->acces);
+	/*if (sotask(time, philo->tasks, thread))
+		return (1) // arret du programme en mode erreur*/
 	return (0);
+}
+
+void* sothread_routine(void* arg)
+{
+    t_sothread *thread = (t_sothread *)arg;  // Cast de l'argument en entier
+	long		millis;
+	long		death;
+
+	pthread_mutex_lock(thread->acces);
+	millis = *thread->millis;
+	pthread_mutex_unlock(thread->acces);
+	death = thread->timeout;
+	while (millis < death)
+	{
+		if (thread->callback)
+			thread->callback(thread, thread->data, millis);
+		pthread_mutex_lock(thread->acces);
+		millis = *thread->millis;
+		pthread_mutex_unlock(thread->acces);
+	}
+    return (NULL);
 }
 
 int	print_eat_start(long time, t_sotask *task)
@@ -196,17 +199,26 @@ void* sothsync_routine(void* arg)
 {
     t_sothsync *sync = (t_sothsync *)arg;  // Cast de l'argument en entier
 	long	starting;
+	long	millis;
+	long	last;
 
 	// mutex start / acces
 	pthread_mutex_lock(sync->acces);
 	pthread_mutex_unlock(sync->acces);
 	starting = get_millis();
-	while (*sync->millis < 5000)
+	millis = 0;
+	last = 0;
+	while (1)
 	{
-		*sync->millis = correct_time(get_millis(), &starting, *sync->millis);
-		soprintf("millis : %ld\n", *sync->millis);
+		millis = correct_time(get_millis(), &starting, millis);
+		if (millis != last)
+		{
+			pthread_mutex_lock(sync->acces);
+			*sync->millis = millis;
+			pthread_mutex_unlock(sync->acces);
+			last = millis;
+		}
 	}
-	free(sync->millis);
     return (NULL);
 }
 
@@ -228,7 +240,7 @@ t_sothsync	*sothsync(t_solib *solib, int nbr, int syncro)
 	*sync->millis = 0;
 	pthread_mutex_init(sync->print, NULL);
 	pthread_mutex_init(sync->acces, NULL);
-	pthread_mutex_lock(sync->print);
+	pthread_mutex_lock(sync->acces);
 	if (pthread_create(&sync->instance, NULL, sothsync_routine, sync))
        	return (solib->close(solib, 1), NULL);
     pthread_detach(sync->instance);
@@ -259,7 +271,10 @@ t_sothsync	*sothread(t_solib *solib, char *timeout, int (*callback)(), void *dat
 	
 	sync = sothsync(solib, 1, 1);
 	sync->threads[0] = sonew_thread(sync, ft_atoi(timeout), callback, data);
-	//lunch thread
+	if (pthread_create(&sync->threads[0]->instance, NULL, sothread_routine, sync->threads[0]))
+       	return (solib->close(solib, 1), NULL);
+    pthread_detach(sync->threads[0]->instance);
+	pthread_mutex_unlock(sync->acces);
 	return (sync);
 }
 
@@ -273,8 +288,11 @@ t_sothsync	*sothreads(t_sothsync *sync, char *timeout, int (*callback)(), void *
 	while (++i < sync->nbr)
 	{
 		sync->threads[i] = sonew_thread(sync, ft_atoi(timeout), callback, data);
-		// detach
+		if (pthread_create(&sync->threads[i]->instance, NULL, sothread_routine, sync->threads[i]))
+       		return (sync->solib->close(sync->solib, 1), NULL);
+    	pthread_detach(sync->threads[i]->instance);
 	}
+	pthread_mutex_unlock(sync->acces);
 	return (sync);
 }
 
@@ -295,7 +313,6 @@ int philosophers(t_solib *solib, int nbr, char **times, int nbr_loop) {
 	(void)syncs;
 	(void)nbr;
 
-	//pthread_mutex_unlock(sync->acces);
 	while (1)
 	{
 		continue;
