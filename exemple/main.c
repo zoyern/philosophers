@@ -193,11 +193,11 @@ void* sothsync_routine(void* arg)
 {
     t_sothsync *sync = (t_sothsync *)arg;  // Cast de l'argument en entier
 	long	starting;
-	sync->millis = somalloc(NULL, sizeof(long));
 
 	// mutex start / acces
+	pthread_mutex_lock(sync->acces);
+	pthread_mutex_unlock(sync->acces);
 	starting = get_millis();
-	*sync->millis = 0;
 	while (*sync->millis < 5000)
 	{
 		*sync->millis = correct_time(get_millis(), &starting, *sync->millis);
@@ -215,16 +215,33 @@ t_sothsync	*sothsync(t_solib *solib, int nbr, int syncro)
 	sync = somalloc(solib, sizeof(t_sothsync));
 	sync->print = somalloc(solib, sizeof(pthread_mutex_t));
 	sync->acces = somalloc(solib, sizeof(pthread_mutex_t));
+	sync->millis = somalloc(NULL, sizeof(long));
 	sync->solib = solib;
 	sync->nbr = nbr;
 	sync->sync = syncro;
 	sync->value = 0;
+	*sync->millis = 0;
 	pthread_mutex_init(sync->print, NULL);
 	pthread_mutex_init(sync->acces, NULL);
+	pthread_mutex_lock(sync->print);
 	if (pthread_create(&sync->instance, NULL, sothsync_routine, sync))
        	return (solib->close(solib, 1), NULL);
     pthread_detach(sync->instance);
 	return (sync);
+}
+
+t_sothread	*sonew_thread()
+{
+
+}
+
+t_sothsync	*sothread(t_solib *solib, long timeout, int (*callback)(), void *data)
+{
+	t_sothsync	*sync;
+	
+	sync = sothsync(solib, 1, 1);
+	sync->threads
+	
 }
 /*
 t_sothread	*sonew_thread(t_sothsync *sync)
@@ -270,6 +287,7 @@ int philosophers(t_solib *solib, int nbr, char **times, int nbr_loop) {
 	/*sync = sothread(solib, times[0] ,routine, philo);
 	sync = sothreads(solib, t_sothread ,routine, philo);*/
 	sync = sothsync(solib, 1, 1);
+	pthread_mutex_unlock(sync->acces);
 	while (1)
 	{
 		continue;
