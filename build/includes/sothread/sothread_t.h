@@ -20,63 +20,31 @@
 # include <sotypes.h>
 # include <solibft.h>
 
-typedef struct s_thread	t_thread;
-typedef struct s_mutex	t_mutex;
-/*
-typedef struct s_mutex
-{
-    int				lock;
-    pthread_mutex_t	*instance;
-}	t_mutex;
+typedef struct s_sothread		t_sothread;
+typedef struct s_sothsync		t_sothsync;
 
-typedef struct s_sync
-{
-	int				id;
+typedef struct s_sothread {
+    t_solib         *solib;
     pthread_t       instance;
-	t_mutex			*print;
-	t_mutex			*start;
-	t_mutex			*time;
-	t_mutex			*die;
-	int				*fork; // tab de 2 int ou plus selon syncro // mutex start
-	int				*work; // mutex start
-	int				**alive; // mutex die
-	int				*value; // mutex die
-	long			*starting;
+    int             id;
+    long            death;     // Temps avant la mort du philosophe
+    void            *data;     // Données spécifiques à l'utilisateur (philosophe)
+    int             (*callback)(struct s_sothread *, void *); // Routine du thread
 	long			*millis;
-	long			*loop;
-	int				*nbr;
-	int				*syncro;
-	void			*data;
-	
-}	t_sync;
+    t_sothsync      *sync;     // Pointeur vers la structure de synchronisation
+} t_sothread;
 
-typedef struct s_thread
-{
-	t_sync			*sync;
-    int				id;
-	long			*millis; // mutex time
-	int				*alive; // mutex die
-	int				*value; // mutex die
-	long			*loop; // mutex start
-	void            *data;
-	int             (*routine)();
-	int             (*condition)();
-}	t_thread;
-
-*/
-
-typedef struct s_pswp		t_pswp;
-typedef struct s_philo		t_philo;
-
-typedef struct s_thread {
-    pthread_t thread;
-    t_solib *solib;
-    int sync;
-    t_philo *philo;
-	long die;
-    pthread_mutex_t *print;
-    pthread_mutex_t *forks;
-    int start;
-} t_thread;
+typedef struct s_sothsync {
+    t_solib         *solib;
+	pthread_t       instance;
+    int             nbr;       // Nombre de philosophes (threads)
+    int             sync;      // Nombre de fourchettes (ressources partagées)
+    int             value;     // Valeur de retour de wait
+	long			*millis;
+	t_sothread		**threads;
+    pthread_mutex_t *print;     // Mutex pour l'affichage
+    pthread_mutex_t *acces;     // Mutex pour protéger l'accès aux ressources partagées
+    pthread_mutex_t *forks;    // Tableau de mutex pour les fourchettes
+} t_sothsync;
 
 #endif

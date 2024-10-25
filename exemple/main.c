@@ -11,8 +11,6 @@
 /* ************************************************************************** */
 
 #include "exemple.h"
-#include <stdio.h>
-#include <solibft/sostdlib.h>
 /*
 typedef struct s_philo
 {
@@ -94,11 +92,7 @@ int	philosophers(t_solib *solib, int nbr, char **times, int nbr_loop)
 
 */
 typedef struct s_philo {
-    int id;
-    int has_eaten;
 	int	loop;
-    int forks_taken;
-    long time;
 	t_sotasks	*tasks;
 } t_philo;
 
@@ -129,27 +123,61 @@ int	routine(t_tread *thread, t_philo *philo) // this is while 1 but blocked if c
 
 */
 
-int	routine(t_thread *thread, t_philo *philo)
+int	routine(t_sothread *thread, t_philo *philo)
 {
+	(void)thread;
+	(void)philo;
 	return (0);
 }
 
-int	task_print(long time, t_sotask *task)
+int	print_eat_start(long time, t_sotask *task)
 {
-	if (task->id == 0 && task->start)
-		soprintf("%ld task eat started\n", time);
-	if (task->id == 0 && task->end)
-		soprintf("%ld task eat end\n", time);
-	if (task->id == 1 && task->start)
-		soprintf("%ld task sleep started\n", time);
-	if (task->id == 1 && task->end)
-		soprintf("%ld task sleep end\n", time);
-	if (task->id == 2 && task->start)
-		soprintf("%ld task think started\n", time);
-	if (task->id == 2 && task->end)
-		soprintf("%ld task think end\n", time);
+	(void)time;
+	(void)task;
+	soprintf("%ld task eat started\n", time);
 	return (0);
 }
+
+int	print_eat_end(long time, t_sotask *task)
+{
+	(void)time;
+	(void)task;
+	soprintf("%ld task eat end\n", time);
+	return (0);
+}
+
+int	print_sleep_start(long time, t_sotask *task)
+{
+	(void)time;
+	(void)task;
+	soprintf("%ld task sleep started\n", time);
+	return (0);
+}
+
+int	print_sleep_end(long time, t_sotask *task)
+{
+	(void)time;
+	(void)task;
+	soprintf("%ld task sleep end\n", time);
+	return (0);
+}
+
+int	print_think_start(long time, t_sotask *task)
+{
+	(void)time;
+	(void)task;
+	soprintf("%ld task think started\n", time);
+	return (0);
+}
+
+int	print_think_end(long time, t_sotask *task)
+{
+	(void)time;
+	(void)task;
+	soprintf("%ld task think end\n", time);
+	return (0);
+}
+
 
 t_philo	*new_philo(t_solib *solib, int nbr_loop)
 {
@@ -161,26 +189,92 @@ t_philo	*new_philo(t_solib *solib, int nbr_loop)
 	return (philo);
 }
 
+void* sothsync_routine(void* arg)
+{
+    t_sothsync *sync = (t_sothsync *)arg;  // Cast de l'argument en entier
+	long	starting;
+	sync->millis = somalloc(NULL, sizeof(long));
+
+	// mutex start / acces
+	starting = get_millis();
+	*sync->millis = 0;
+	while (*sync->millis < 5000)
+	{
+		*sync->millis = correct_time(get_millis(), &starting, *sync->millis);
+		soprintf("millis : %ld\n", *sync->millis);
+	}
+	free(sync->millis);
+    return (NULL);
+}
+
+
+t_sothsync	*sothsync(t_solib *solib, int nbr, int syncro)
+{
+	t_sothsync	*sync;
+
+	sync = somalloc(solib, sizeof(t_sothsync));
+	sync->print = somalloc(solib, sizeof(pthread_mutex_t));
+	sync->acces = somalloc(solib, sizeof(pthread_mutex_t));
+	sync->solib = solib;
+	sync->nbr = nbr;
+	sync->sync = syncro;
+	sync->value = 0;
+	pthread_mutex_init(sync->print, NULL);
+	pthread_mutex_init(sync->acces, NULL);
+	if (pthread_create(&sync->instance, NULL, sothsync_routine, sync))
+       	return (solib->close(solib, 1), NULL);
+    pthread_detach(sync->instance);
+	return (sync);
+}
+/*
+t_sothread	*sonew_thread(t_sothsync *sync)
+{
+
+}
+
+t_sothsync	*sothread()
+{
+
+}
+
+t_sothsync	*sothreads(int nbr, int syncro, t_sofuncs funcs, void *data)
+{
+	t_sothread	**threads;
+	int	i;
+
+	i = -1;
+	while (++i > nbr)
+	{
+		threads[i] = sonew_thread()
+	}
+	
+}*/
+
 int philosophers(t_solib *solib, int nbr, char **times, int nbr_loop) {
 
-	t_philo	*philo;
-	long	starting;
-	long	millis;
+	t_philo		*philo;
+	t_sothsync	*sync;
 	
 	(void)nbr;
-	philo = new_philo(solib, nbr_loop);
-	sotask_add(philo->tasks, 0, sonew_task(solib, times[1], task_print, philo));
-	sotask_add(philo->tasks, 1, sonew_task(solib, times[2], task_print, philo));
-	sotask_add(philo->tasks, 2, sonew_task(solib, times[3], task_print, philo));
+	(void)sync;
+	(void)times;
+	(void)nbr_loop;
+	(void)philo;
+	/*philo = new_philo(solib, nbr_loop);
+	sotask_add(philo->tasks, 0, sonew_task(solib, times[1], sofuncs(print_eat_start, NULL, print_eat_end), philo));
+	sotask_add(philo->tasks, 1, sonew_task(solib, times[2], sofuncs(print_sleep_start, NULL, print_sleep_end), philo));
+	sotask_add(philo->tasks, 2, sonew_task(solib, times[3], sofuncs(print_think_start, NULL, print_think_end), philo));
 	
-	millis = 0;
-	starting = get_millis();
-	while (philo->tasks->loop < 5)
+	sync = sothreads(nbr, 2, funcs(NULL, NULL, NULL), philo);
+	*/
+	/*sync = sothread(solib, times[0] ,routine, philo);
+	sync = sothreads(solib, t_sothread ,routine, philo);*/
+	sync = sothsync(solib, 1, 1);
+	while (1)
 	{
-		millis = correct_time(get_millis(), &starting, millis);
-		if (sotask(millis, philo->tasks, NULL))
-			soprintf("%C#FF0000(tasks finished)\n");
+		continue;
 	}
+	
 	soprintf("finished task nbr: %d loop : %d\n", philo->tasks->count, philo->tasks->loop);
 	/*t_threads *threads = sothreads(solib, nbr, 2, routine);
 	mutex(threads->print, print_helloworld, NULL);*/
@@ -196,6 +290,7 @@ int	argv_is_numeric(t_solib *solib)
 	int	j;
 
 	i = 0;
+	soprintf("p solib : %p\n", solib->libft);
 	while (solib->env->argv[i])
 	{
 		j = 0;
@@ -219,7 +314,7 @@ char	**create_times(t_solib *solib, int get_last)
 	int		size;
 
 	size = solib->env->argc - 1 - !get_last;
-	times = solib->malloc(solib, sizeof(char *) * (size + 1));
+	times = somalloc(solib, sizeof(char *) * (size + 1));
 	i = 0;
 	while (i < size)
 	{
@@ -235,7 +330,7 @@ int	main(int argc, char **argv, char **envp)
 	t_solib	*solib;
 
 	solib = sonew_libft(sonew_types(argc, argv, envp));
-	if (!solib)
+	if (!solib || !solib->libft)
 		return (solib->close(solib, EXIT_FAILURE));
 	if ((solib->env->argc != 4 && solib->env->argc != 5)
 		|| !argv_is_numeric(solib))

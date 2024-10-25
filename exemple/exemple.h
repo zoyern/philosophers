@@ -17,6 +17,7 @@
 # include <stdlib.h>
 # include <sotypes.h>
 # include <solibft.h>
+# include <solibft/sostdlib.h>
 # include <sothread.h>
 
 #endif

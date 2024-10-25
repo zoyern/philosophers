@@ -14,6 +14,7 @@
 		"utils.h": "c",
 		"sostdlib.h": "c",
 		"sothread_t.h": "c",
-		"sothread.h": "c"
+		"sothread.h": "c",
+		"exemple.h": "c"
 	}
 }
