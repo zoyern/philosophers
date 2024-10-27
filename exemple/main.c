@@ -102,82 +102,98 @@ int	routine(t_sothread *thread, t_philo *philo)
 {
 	(void)thread;
 	(void)philo;
-	pthread_mutex_lock(thread->acces);
-	pthread_mutex_lock(thread->print);
-	soprintf("millis : %ld\n", *thread->millis);
-	pthread_mutex_unlock(thread->print);
-	pthread_mutex_unlock(thread->acces);
-	/*if (sotask(time, philo->tasks, thread))
-		return (1) // arret du programme en mode erreur*/
+	if (sotask(thread->millis, philo->tasks, thread))
+		return (1); // arret du programme en mode erreur*/
 	return (0);
 }
 
 void* sothread_routine(void* arg)
 {
     t_sothread *thread = (t_sothread *)arg;  // Cast de l'argument en entier
-	long		millis;
+	long		starting;
 	long		death;
 
+	starting = 0;
 	pthread_mutex_lock(thread->acces);
-	millis = *thread->millis;
+	starting = *thread->starting;
 	pthread_mutex_unlock(thread->acces);
 	death = thread->timeout;
-	while (millis < death)
+	thread->millis = get_millis() - starting;
+	while (thread->millis <= death)
 	{
 		if (thread->callback)
-			thread->callback(thread, thread->data, millis);
-		pthread_mutex_lock(thread->acces);
-		millis = *thread->millis;
-		pthread_mutex_unlock(thread->acces);
+			thread->callback(thread, thread->data);
+		thread->millis = get_millis() - starting;
 	}
+	pthread_mutex_lock(thread->acces);
+	*thread->value = 1;
+	pthread_mutex_unlock(thread->acces);
     return (NULL);
 }
 
-int	print_eat_start(long time, t_sotask *task)
+int	print_eat_start(long time, t_sotask *task, t_philo *philo, t_sothread *thread)
 {
 	(void)time;
 	(void)task;
-	soprintf("%ld task eat started\n", time);
+	(void)philo;
+	pthread_mutex_lock(thread->print);
+	soprintf("%ld \t%d\ttask eat started\n", time, thread->id);
+	pthread_mutex_unlock(thread->print);
 	return (0);
 }
 
-int	print_eat_end(long time, t_sotask *task)
+int	print_eat_end(long time, t_sotask *task, t_philo *philo, t_sothread *thread)
 {
 	(void)time;
 	(void)task;
-	soprintf("%ld task eat end\n", time);
+	(void)philo;
+	pthread_mutex_lock(thread->print);
+	soprintf("%ld \t%d\ttask eat end\n", time, thread->id);
+	pthread_mutex_unlock(thread->print);
 	return (0);
 }
 
-int	print_sleep_start(long time, t_sotask *task)
+int	print_sleep_start(long time, t_sotask *task, t_philo *philo, t_sothread *thread)
 {
 	(void)time;
 	(void)task;
-	soprintf("%ld task sleep started\n", time);
+	(void)philo;
+	pthread_mutex_lock(thread->print);
+	soprintf("%ld \t%d\ttask sleep started\n", time, thread->id);
+	pthread_mutex_unlock(thread->print);
 	return (0);
 }
 
-int	print_sleep_end(long time, t_sotask *task)
+int	print_sleep_end(long time, t_sotask *task, t_philo *philo, t_sothread *thread)
 {
 	(void)time;
 	(void)task;
-	soprintf("%ld task sleep end\n", time);
+	(void)philo;
+	pthread_mutex_lock(thread->print);
+	soprintf("%ld \t%d\ttask sleep end\n", time, thread->id);
+	pthread_mutex_unlock(thread->print);
 	return (0);
 }
 
-int	print_think_start(long time, t_sotask *task)
+int	print_think_start(long time, t_sotask *task, t_philo *philo, t_sothread *thread)
 {
 	(void)time;
 	(void)task;
-	soprintf("%ld task think started\n", time);
+	(void)philo;
+	pthread_mutex_lock(thread->print);
+	soprintf("%ld \t%d\ttask think started\n", time, thread->id);
+	pthread_mutex_unlock(thread->print);
 	return (0);
 }
 
-int	print_think_end(long time, t_sotask *task)
+int	print_think_end(long time, t_sotask *task, t_philo *philo, t_sothread *thread)
 {
 	(void)time;
 	(void)task;
-	soprintf("%ld task think end\n", time);
+	(void)philo;
+	pthread_mutex_lock(thread->print);
+	soprintf("%ld \t%d\ttask think end\n", time, thread->id);
+	pthread_mutex_unlock(thread->print);
 	return (0);
 }
 
@@ -195,29 +211,22 @@ t_philo	*new_philo(t_solib *solib, int nbr_loop, char **times)
 	return (philo);
 }
 
+
 void* sothsync_routine(void* arg)
 {
     t_sothsync *sync = (t_sothsync *)arg;  // Cast de l'argument en entier
-	long	starting;
-	long	millis;
-	long	last;
+	int		value;
 
 	// mutex start / acces
 	pthread_mutex_lock(sync->acces);
+	*sync->starting = get_millis();
+	value = *sync->value;
 	pthread_mutex_unlock(sync->acces);
-	starting = get_millis();
-	millis = 0;
-	last = 0;
-	while (1)
+	while (!value)
 	{
-		millis = correct_time(get_millis(), &starting, millis);
-		if (millis != last)
-		{
-			pthread_mutex_lock(sync->acces);
-			*sync->millis = millis;
-			pthread_mutex_unlock(sync->acces);
-			last = millis;
-		}
+		pthread_mutex_lock(sync->acces);
+		value = *sync->value;
+		pthread_mutex_unlock(sync->acces);
 	}
     return (NULL);
 }
@@ -232,12 +241,13 @@ t_sothsync	*sothsync(t_solib *solib, int nbr, int syncro)
 	sync->threads[nbr] = NULL;
 	sync->print = somalloc(solib, sizeof(pthread_mutex_t));
 	sync->acces = somalloc(solib, sizeof(pthread_mutex_t));
-	sync->millis = somalloc(NULL, sizeof(long));
+	sync->starting = somalloc(NULL, sizeof(long));
+	sync->value = somalloc(NULL, sizeof(int));
 	sync->solib = solib;
 	sync->nbr = nbr;
 	sync->sync = syncro;
-	sync->value = 0;
-	*sync->millis = 0;
+	*sync->value = 0;
+	*sync->starting = get_millis();
 	pthread_mutex_init(sync->print, NULL);
 	pthread_mutex_init(sync->acces, NULL);
 	pthread_mutex_lock(sync->acces);
@@ -256,10 +266,12 @@ t_sothread	*sonew_thread(t_sothsync *sync, long timeout, int (*callback)(), void
 	thread = somalloc(sync->solib, sizeof(t_sothread));
 	thread->solib = sync->solib;
 	thread->id = 0;
+	thread->millis = 0;
+	thread->value = sync->value;
 	thread->timeout = timeout;
 	thread->data = data;
 	thread->callback = callback;
-	thread->millis = sync->millis;
+	thread->starting = sync->starting;
 	thread->print = sync->print;
 	thread->acces = sync->acces;
 	return (thread);
@@ -288,6 +300,7 @@ t_sothsync	*sothreads(t_sothsync *sync, char *timeout, int (*callback)(), void *
 	while (++i < sync->nbr)
 	{
 		sync->threads[i] = sonew_thread(sync, ft_atoi(timeout), callback, data);
+		sync->threads[i]->id = i;
 		if (pthread_create(&sync->threads[i]->instance, NULL, sothread_routine, sync->threads[i]))
        		return (sync->solib->close(sync->solib, 1), NULL);
     	pthread_detach(sync->threads[i]->instance);
@@ -307,15 +320,23 @@ int philosophers(t_solib *solib, int nbr, char **times, int nbr_loop) {
 	// t_sothsync	*sothread(t_solib *solib, long timeout, int (*callback)(), void *data);
 	// t_sothsync	*sothreads(t_sothsync *sync, long timeout, int (*callback)(), void *data);
 	philo = new_philo(solib, nbr_loop, times);
-	sync = sothread(solib, times[0], routine, philo);
-	//syncs = sothreads(sothsync(solib, nbr, 2), times[0], routine, philo);
+	//sync = sothread(solib, times[0], routine, philo);
+	syncs = sothreads(sothsync(solib, nbr, 2), times[0], routine, philo);
 	(void)sync;
 	(void)syncs;
 	(void)nbr;
 
-	while (1)
+	int		value;
+
+	// mutex start / acces
+	pthread_mutex_lock(syncs->acces);
+	value = *syncs->value;
+	pthread_mutex_unlock(syncs->acces);
+	while (!value)
 	{
-		continue;
+		pthread_mutex_lock(syncs->acces);
+		value = *syncs->value;
+		pthread_mutex_unlock(syncs->acces);
 	}
 	
 	soprintf("finished task nbr: %d loop : %d\n", philo->tasks->count, philo->tasks->loop);
@@ -331,7 +352,6 @@ int	argv_is_numeric(t_solib *solib)
 	int	j;
 
 	i = 0;
-	soprintf("p solib : %p\n", solib->libft);
 	while (solib->env->argv[i])
 	{
 		j = 0;
