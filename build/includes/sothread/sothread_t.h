@@ -23,30 +23,38 @@
 typedef struct s_sothread		t_sothread;
 typedef struct s_sothsync		t_sothsync;
 
+typedef struct s_mutex {
+	pthread_mutex_t *acces;
+	int				*locked;
+	int				*value;
+} t_mutex;
+
 typedef struct s_sothread {
-    t_solib         *solib;
-    pthread_t       instance;
-    int             id;
-    int             *value;
-    long            timeout;     // Temps avant la mort du philosophe
-    void            *data;     // Données spécifiques à l'utilisateur (philosophe)
-    int             (*callback)(); // Routine du thread
+	t_solib         *solib;
+	pthread_t       instance;
+	int             id;
+	int             *value;
+	long            timeout;     // Temps avant la mort du philosophe
+	void            *data;     // Données spécifiques à l'utilisateur (philosophe)
+	int             (*callback)(); // Routine du thread
 	long			*starting;
 	long			millis;
-	pthread_mutex_t *print;     // Mutex pour l'affichage
-    pthread_mutex_t *acces;     // Mutex pour protéger l'accès aux ressources partagées
+	t_mutex			fork;
+	t_mutex			print;     // Mutex pour l'affichage
+	t_mutex			acces;     // Mutex pour protéger l'accès aux ressources partagées
 } t_sothread;
 
 typedef struct s_sothsync {
-    t_solib         *solib;
+	t_solib         *solib;
 	pthread_t       instance;
-    int             nbr;       // Nombre de philosophes (threads)
-    int             sync;      // Nombre de fourchettes (ressources partagées)
-    int             *value;     // Valeur de retour de wait
+	int             nbr;       // Nombre de philosophes (threads)
+	int             syncro;      // Nombre de fourchettes (ressources partagées)
+	int             *value;     // Valeur de retour de wait
 	long			*starting;
 	t_sothread		**threads;
-    pthread_mutex_t *print;     // Mutex pour l'affichage
-    pthread_mutex_t *acces;     // Mutex pour protéger l'accès aux ressources partagées
+	t_mutex			*forks;
+	t_mutex			print;     // Mutex pour l'affichage
+	t_mutex			acces;     // Mutex pour protéger l'accès aux ressources partagées
 } t_sothsync;
 
 #endif
