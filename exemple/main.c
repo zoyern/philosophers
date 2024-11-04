@@ -41,26 +41,13 @@ int	print_millis(t_mutex mutex, t_sothread *thread)
 }
 
 
-/* finish
-locked	= 0;
-id		= id;
-value	= 0;
-*/
-
-
-int	f_finish(t_mutex *fork)
-{
-	if  (fork && !*fork->locked && *fork->id > -1 && !*fork->value)
-		return (1);
-	return (0);
-}
-
 int	sothpause(t_sothread *thread)
 {
 	pthread_mutex_lock(thread->fork.acces);
 	*thread->fork.value = 0;
+	*thread->fork.finish = 1;
 	*thread->fork.locked = 0;
-	pthread_mutex_unlock(thread->print.acces);
+	pthread_mutex_unlock(thread->fork.acces);
 	return (0);
 }
 
@@ -68,7 +55,6 @@ int	routine(t_sothread *thread, t_philo *philo)
 {
 	(void)thread;
 	(void)philo;
-	//mutex(thread->print, print_millis, thread);
 	if (sotask(thread->millis, philo->tasks[thread->id], thread))
 		sothpause(thread);
 	if (philo->tasks[thread->id]->loop == philo->loop)
@@ -103,8 +89,10 @@ void* sothread_routine(void* arg)
 	thread->millis = get_millis() - starting;
 	while (thread->millis <= death)
 	{
+		//mutex(thread->print, print_millis, thread);
 		if (mutex(thread->fork, mutex_get_value, NULL))
 		{
+			death += thread->timeout;
 			if (thread->callback)
 				 ret = thread->callback(thread, thread->data);
 			if (ret)
@@ -113,7 +101,7 @@ void* sothread_routine(void* arg)
 		thread->millis = get_millis() - starting;
 	}
 	pthread_mutex_lock(thread->acces.acces);
-	*thread->value = ret;
+	*thread->value = 1;
 	pthread_mutex_unlock(thread->acces.acces);
     return (NULL);
 }
@@ -129,17 +117,6 @@ int	print_eat_start(long time, t_sotask *task, t_philo *philo, t_sothread *threa
 	return (0);
 }
 
-int	print_eat_end(long time, t_sotask *task, t_philo *philo, t_sothread *thread)
-{
-	(void)time;
-	(void)task;
-	(void)philo;
-	pthread_mutex_lock(thread->print.acces);
-	soprintf("%ld \t%d\ttask eat end\n", time, thread->id);
-	pthread_mutex_unlock(thread->print.acces);
-	return (0);
-}
-
 int	print_sleep_start(long time, t_sotask *task, t_philo *philo, t_sothread *thread)
 {
 	(void)time;
@@ -147,17 +124,6 @@ int	print_sleep_start(long time, t_sotask *task, t_philo *philo, t_sothread *thr
 	(void)philo;
 	pthread_mutex_lock(thread->print.acces);
 	soprintf("%ld \t%d\ttask sleep started\n", time, thread->id);
-	pthread_mutex_unlock(thread->print.acces);
-	return (0);
-}
-
-int	print_sleep_end(long time, t_sotask *task, t_philo *philo, t_sothread *thread)
-{
-	(void)time;
-	(void)task;
-	(void)philo;
-	pthread_mutex_lock(thread->print.acces);
-	soprintf("%ld \t%d\ttask sleep end\n", time, thread->id);
 	pthread_mutex_unlock(thread->print.acces);
 	return (0);
 }
@@ -173,16 +139,7 @@ int	print_think_start(long time, t_sotask *task, t_philo *philo, t_sothread *thr
 	return (0);
 }
 
-int	print_think_end(long time, t_sotask *task, t_philo *philo, t_sothread *thread)
-{
-	(void)time;
-	(void)task;
-	(void)philo;
-	pthread_mutex_lock(thread->print.acces);
-	soprintf("%ld \t%d\ttask think end\n", time, thread->id);
-	pthread_mutex_unlock(thread->print.acces);
-	return (0);
-}
+
 
 
 t_philo	*new_philo(t_solib *solib, int nbr_loop, char **times, int nbr)
@@ -198,69 +155,18 @@ t_philo	*new_philo(t_solib *solib, int nbr_loop, char **times, int nbr)
 	while (++i < nbr)
 	{
 		philo->tasks[i] = sotask_list(solib);
-		sotask_add(philo->tasks[i], 0, sonew_task(solib, times[1], sofuncs(print_eat_start, NULL, print_eat_end), philo));
-		sotask_add(philo->tasks[i], 1, sonew_task(solib, times[2], sofuncs(print_sleep_start, NULL, print_sleep_end), philo));
-		sotask_add(philo->tasks[i], 2, sonew_task(solib, times[3], sofuncs(print_think_start, NULL, print_think_end), philo));
+		sotask_add(philo->tasks[i], 0, sonew_task(solib, times[1], sofuncs(print_eat_start, NULL, NULL), philo));
+		sotask_add(philo->tasks[i], 1, sonew_task(solib, times[2], sofuncs(print_sleep_start, NULL, NULL), philo));
+		sotask_add(philo->tasks[i], 2, sonew_task(solib, times[3], sofuncs(print_think_start, NULL, NULL), philo));
 	}
 	return (philo);
 }
 
 
-// forks  :
-
-//	pthread_mutex_t *acces; // mutex
-//	int				*locked; // utiliser ou libre
-//	int				*id; // id de celui qui le détient
-//	int				*value; // value si la routine peux travaillé ou pas
-
-/* need eat
-locked	= 0;
-id		= -1;
-value	= 0;
-*/
-
-// mutex
-
-// mutex
-
-/* work
-locked	= 1;
-id		= -1;
-value	= 1;
-*/
-
-
-/* locked by other
-locked	= 1; // set to 0 when finish
-id		= 0; // set to -1
-value	= 0;
-*/
-
-
-
-/* finish
-locked	= 0;
-id		= id;
-value	= 0;
-*/
-
-
-
-
-
-
-// debut locked 1 id -1 et value = 0 = need eat
-// debut locked 1 id > -1 et value = 1 = work
-// debut locked 1 id > -1 et value = 0 = locked by other
-// debut locked 0 id > -1 et value = 0 = finished reset the locked by id
-
 int		get_fork(int id, int syncro, int max, t_mutex *fork)
 {
 	if (!syncro)
-	{
-		soprintf("fork taked\n");
 		return (1);
-	}
 	pthread_mutex_lock(fork[id % max].acces);
 	if (!*fork[id % max].locked && !*fork[id % max].value)
 	{
@@ -275,6 +181,37 @@ int		get_fork(int id, int syncro, int max, t_mutex *fork)
 	return (0);
 }
 
+int		test_reset(int id, int syncro, int max, t_mutex *fork)
+{
+	if (!syncro)
+		return (1);
+	pthread_mutex_lock(fork[id % max].acces);
+	*fork[id % max].locked = 0;
+	*fork[id % max].value = 0;
+	*fork[id % max].finish = 0;
+	pthread_mutex_unlock(fork[id % max].acces);
+	if (test_reset(id + 1, syncro - 1, max, fork))
+		return (1);
+	return (0);
+}
+
+int		reset_fork(int id, int syncro, int max, t_mutex *fork)
+{
+	if (!syncro)
+		return (1);
+	pthread_mutex_lock(fork[id % max].acces);
+	if (!*fork[id % max].locked && !*fork[id % max].value && *fork[id % max].finish)
+	{
+		*fork[id % max].finish = 0;
+		pthread_mutex_unlock(fork[id % max].acces);
+		if (test_reset(id, syncro, max, fork))
+			return (1);
+		pthread_mutex_lock(fork[id % max].acces);
+	}
+	pthread_mutex_unlock(fork[id % max].acces);
+	return (0);
+}
+
 void	sync_threads(int nbr, t_sothsync *sync)
 {
 	int	i;
@@ -282,8 +219,17 @@ void	sync_threads(int nbr, t_sothsync *sync)
 	i = -1;
 	while (++i < nbr) // id de ma fork 
 	{
-		if (get_fork(i, sync->syncro, sync->nbr, sync->forks))
+		if (reset_fork(i, sync->syncro, sync->nbr, sync->forks))
 		{
+			pthread_mutex_lock(sync->print.acces);
+			soprintf("reset fork\n");
+			pthread_mutex_unlock(sync->print.acces);
+		}
+		else if (get_fork(i, sync->syncro, sync->nbr, sync->forks))
+		{
+			pthread_mutex_lock(sync->print.acces);
+			soprintf("fork taked\n");
+			pthread_mutex_unlock(sync->print.acces);
 			pthread_mutex_lock(sync->forks[i].acces);
 			*sync->forks[i].value = 1;
 			pthread_mutex_unlock(sync->forks[i].acces);
@@ -295,12 +241,9 @@ void* sothsync_routine(void* arg)
 {
     t_sothsync *sync = (t_sothsync *)arg;  // Cast de l'argument en entier
 	int		value;
-	int		one;
 
 	// mutex start / acces
-	one = 1;
 	value = 0;
-	mutex(sync->forks[0], mutex_set_value, &one);
 	while (!value)
 	{
 		sync_threads(sync->nbr, sync);
@@ -316,12 +259,12 @@ t_mutex	new_mutex(t_solib *solib, int locked, int value)
 	t_mutex	fork;
 
 	fork.acces = somalloc(solib, sizeof(pthread_mutex_t));
-	fork.id = somalloc(solib, sizeof(int));
+	fork.finish = somalloc(solib, sizeof(int));
 	fork.locked = somalloc(solib, sizeof(int));
 	fork.value = somalloc(solib, sizeof(int));
 	pthread_mutex_init(fork.acces, NULL);
 	*fork.locked = locked;
-	*fork.id = -1;
+	*fork.finish = 0;
 	*fork.value = value;
 	return (fork);
 }
@@ -451,8 +394,9 @@ int philosophers(t_solib *solib, int nbr, char **times, int nbr_loop) {
 		value = *syncs->value;
 		pthread_mutex_unlock(syncs->acces.acces);
 	}
-	
+	pthread_mutex_lock(syncs->print.acces);
 	soprintf("%ld - finished task nbr: %d loop : %d\n",  get_millis() - *syncs->starting, philo->tasks[0]->count, philo->tasks[0]->loop);
+	pthread_mutex_unlock(syncs->print.acces);
 	//wait_threads(threads, 1 /*blocked (permet de dire si on veux juste executer vite fais pour avoir une valeur de retour pendant l'execution du thread par exemple ou en es le programme ou si on veux bloquer le programme en attente d'une fin total des threads)*/, callback_watch /*recuperer les derniere donné et peux renvoyer un int en fonction du callback*/, philo)
 	return (0);
 }

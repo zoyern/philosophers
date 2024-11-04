@@ -26,7 +26,7 @@ typedef struct s_sothsync		t_sothsync;
 typedef struct s_mutex {
 	pthread_mutex_t *acces;
 	int				*locked;
-	int				*id;
+	int				*finish;
 	int				*value;
 } t_mutex;
 
@@ -49,11 +49,11 @@ typedef struct s_sothsync {
 	t_solib         *solib;
 	pthread_t       instance;
 	int             nbr;       // Nombre de philosophes (threads)
-	int             syncro;      // Nombre de fourchettes (ressources partagées)
+	int             syncro;      // Nombre de fourchettes (ressources partagées) 4 
 	long			*starting;
 	int				*value;
 	t_sothread		**threads;
-	t_mutex			*forks;
+	t_mutex			*forks; 
 	t_mutex			print;     // Mutex pour l'affichage
 	t_mutex			acces;     // Mutex pour protéger l'accès aux ressources partagées
 } t_sothsync;
