@@ -19,6 +19,7 @@
 # include <pthread.h>
 # include <sotypes.h>
 # include <solibft.h>
+#include <limits.h>
 
 typedef struct s_sothread		t_sothread;
 typedef struct s_sothsync		t_sothsync;
@@ -27,6 +28,8 @@ typedef struct s_mutex {
 	pthread_mutex_t *acces;
 	int				*locked;
 	int				*finish;
+	int				*eat;
+	long			*time;
 	int				*value;
 } t_mutex;
 
@@ -43,6 +46,7 @@ typedef struct s_sothread {
 	t_mutex			fork;
 	t_mutex			print;     // Mutex pour l'affichage
 	t_mutex			acces;     // Mutex pour protéger l'accès aux ressources partagées
+	t_mutex			thread_acces;     // Mutex pour protéger l'accès aux ressources partagées
 } t_sothread;
 
 typedef struct s_sothsync {
@@ -56,6 +60,7 @@ typedef struct s_sothsync {
 	t_mutex			*forks; 
 	t_mutex			print;     // Mutex pour l'affichage
 	t_mutex			acces;     // Mutex pour protéger l'accès aux ressources partagées
+	t_mutex			thread_acces;     // Mutex pour protéger l'accès aux ressources partagées
 } t_sothsync;
 
 #endif
