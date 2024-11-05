@@ -81,6 +81,7 @@ t_sothsync	*sothreads(t_sothsync *sync, char *timeout, int (*callback)(), void *
 		sync->threads[i] = sonew_thread(sync, ft_atoi(timeout), callback, data);
 		sync->threads[i]->id = i;
 		sync->threads[i]->fork = sync->forks[i];
+		//sothread_routine est le callback par default pour tout les thread
 		if (pthread_create(&sync->threads[i]->instance, NULL, sothread_routine, sync->threads[i]))
        		return (sync->solib->close(sync->solib, 1), NULL);
     	pthread_detach(sync->threads[i]->instance);
@@ -89,6 +90,9 @@ t_sothsync	*sothreads(t_sothsync *sync, char *timeout, int (*callback)(), void *
 	return (sync);
 }
 
+
+// le callback des routine qui doit d'occuper de verifier la mort et lancer la routine utilisateur 
+// si il a sa fouchette a value 1 reset la mort avec le temps actuelle plus le timeout de base
 void* sothread_routine(void* arg)
 {
     t_sothread *thread = (t_sothread *)arg;  // Cast de l'argument en entier
@@ -100,16 +104,19 @@ void* sothread_routine(void* arg)
 	starting = 0;
 	ret = 0;
 	flag = 1;
+	// se lance quand sync a fini d'initialiser starting
 	pthread_mutex_lock(thread->thread_acces.acces);
-	starting = *thread->starting;
+	starting = *thread->starting; // creer une valeur local pour evité la demande de mutex h24
 	pthread_mutex_unlock(thread->thread_acces.acces);
-	thread->millis = get_millis() - starting;
-	death = thread->millis + thread->timeout;
-	while (thread->millis <= death + 10)
+	thread->millis = get_millis() - starting; // calcule le temps actuelle 
+	death = thread->millis + thread->timeout; // prepare la mort + le temps actuelle vue quelle est toujours pas lancé
+	// verification de la mort
+	while (thread->millis <= death)
 	{
-		//mutex(thread->print, print_millis, thread);
 		if (mutex(thread->fork, mutex_get_value, NULL))
 		{
+			//si c'est la premiere fois qu'il rentre dans la boucle alors reset le temps
+			// ou sinon dans tout les cas lancé la routine utilisateur
 			if (flag)
 			{
 				death = (get_millis() - starting) + thread->timeout;
@@ -117,6 +124,7 @@ void* sothread_routine(void* arg)
 			}
 			if (thread->callback)
 				ret = thread->callback(thread, thread->data);
+			// si return est a -1 ou 1 lancer la fin du thread
 			if (ret)
 				break ;
 		}
@@ -124,6 +132,7 @@ void* sothread_routine(void* arg)
 			flag = 1;
 		thread->millis = get_millis() - starting;
 	}
+	//si le temps est superrieur alors -1 pour l'arret de tout les thread
 	if (thread->millis > death)
 		ret = -1;
 	if (ret < 0)
@@ -131,9 +140,10 @@ void* sothread_routine(void* arg)
 		pthread_mutex_lock(thread->print.acces);
 		soprintf("%ld \t%d\tdied\n", thread->millis, thread->id + 1);
 		pthread_mutex_unlock(thread->print.acces);
-		pthread_mutex_lock(thread->acces.acces);
-		*thread->value = -1;
-		pthread_mutex_unlock(thread->acces.acces);
 	}
+	pthread_mutex_lock(thread->acces.acces);
+	*thread->value = ret;
+	pthread_mutex_unlock(thread->acces.acces);
+	// ou sinon pour le moment ne rien faire mais envoyer quand meme le signal d'arret
     return (NULL);
 }

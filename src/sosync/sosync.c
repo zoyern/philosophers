@@ -40,6 +40,7 @@ t_sothsync	*sothsync(t_solib *solib, int nbr, int syncro)
 	return (sync);
 }
 
+// routine du monitor permet d'arreté les thread si -1 et calcule de nombre de 1 pour l'arret normal avec loop
 void* sothsync_routine(void* arg)
 {
     t_sothsync *sync = (t_sothsync *)arg;  // Cast de l'argument en entier
@@ -51,6 +52,7 @@ void* sothsync_routine(void* arg)
 	value = 0;
 	while (!value)
 	{
+		//permet de donné les fourchette
 		sync_threads(sync->nbr, sync);
 		pthread_mutex_lock(sync->acces.acces);
 		value = *sync->value;
@@ -68,8 +70,11 @@ void	sync_threads(int nbr, t_sothsync *sync)
 	while (++i < nbr) // id de ma fork 
 	{
 		j = -1;
+		// a chaque fois que je rentre dans ma loop je tente de tout reset si il y a un finish pour etre sur que je peux reprendre une fourchette
 		while (++j < nbr) // id de ma fork 
 			reset_fork(j, sync->syncro, sync->nbr, sync->forks);
+		// regarde avec check_eat si il a plus de repas que les autre ou si son dernier repas a un temps plus élevé que les autres si il y a un plus faible 1 si c'est le plus faible 0
+		// get_fork permet de lock les fourchette de facon recursive si echou 0 si reussi a prendre toute ses fourchette 1
 		if (!check_eat(i,  sync->syncro, sync->nbr, sync->forks) && get_fork(i, sync->syncro, sync->nbr, sync->forks))
 		{
 			pthread_mutex_lock(sync->forks[i].acces);
@@ -85,6 +90,9 @@ void	sync_threads(int nbr, t_sothsync *sync)
 	}
 }
 
+
+//permet d'arreté le thread en cours pour qu'il se mettent a vouloir une fourchette
+// ou arret de la rétention de la fourchette dans pour autant arreté le thread
 int	sothpause(t_sothread *thread, int value, int finish)
 {
 	pthread_mutex_lock(thread->fork.acces);
