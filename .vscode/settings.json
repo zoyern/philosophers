@@ -15,6 +15,7 @@
 		"sostdlib.h": "c",
 		"sothread_t.h": "c",
 		"sothread.h": "c",
-		"exemple.h": "c"
+		"exemple.h": "c",
+		"sosync.h": "c"
 	}
 }

@@ -15,5 +15,9 @@
 
 # include <sothread/sothread_t.h>
 # include <sothread.h>
+# include <sothread/sosync.h>
+# include <sothread/somutex.h>
+
+void* sothread_routine(void* arg);
 
 #endif

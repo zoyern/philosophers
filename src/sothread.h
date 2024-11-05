@@ -17,19 +17,10 @@
 
 
 long		get_millis(void);
-long		correct_time(long current, long *starting, long last);
-/*
-int	sothread(void);
-int	sof(int f2, int func, int f1);
-int	mutlock(t_mutex *mutex);
-int	mutend(t_mutex *mutex);
-t_mutex *new_mutex(t_solib *solib, int locked);
-void* thread_routine(void* arg);
-t_thread	*new_thread(t_solib *solib,  int (*condition)() , int (*routine)(), t_sync *sync);
-int	wait_thread(t_thread *thread, int blocked);
-long	get_millis(void);
-t_sync	*thread_sync(t_solib *solib, void *data, int lock, t_sync *cpsync);
-int	thread_kill(t_thread *thread);
-t_thread	*new_threads(t_solib *solib,  int nbr, int syncro, t_thread *cpthread);
-*/
+int			wait_sothread(t_sothsync *sync);
+t_sothread	*sonew_thread(t_sothsync *sync, long timeout, int (*callback)(), void *data);
+t_sothsync	*sothread(t_solib *solib, char *timeout, int (*callback)(), void *data);
+t_sothsync	*sothreads(t_sothsync *sync, char *timeout, int (*callback)(), void *data);
+int			sothpause(t_sothread *thread, int value, int finish);
+t_sothsync	*sothsync(t_solib *solib, int nbr, int syncro);
 #endif

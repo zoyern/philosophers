@@ -12,6 +12,6 @@
 
 EXEMPLE_DIR		= $(CURDIR)/exemple
 
-EXEMPLE_FILES	= main.c
+EXEMPLE_FILES	= main.c printing.c
 
 SRC_EXEMPLE	= $(addprefix $(EXEMPLE_DIR)/, $(EXEMPLE_FILES))
