@@ -41,7 +41,7 @@ t_mutex	new_mutex(t_solib *solib, int locked, int value)
 	*fork.locked = locked;
 	*fork.eat = 0;
 	*fork.finish = 0;
-	*fork.time = get_millis();
+	*fork.time = 0;
 	*fork.value = value;
 	return (fork);
 }

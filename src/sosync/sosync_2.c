@@ -33,10 +33,13 @@ int		check_eat(int id, int max, t_mutex *fork)
 	pthread_mutex_unlock(fork[id].acces);
 	while (++i < max)
 	{
-		pthread_mutex_lock(fork[(id + i) % max].acces);
-		if (time > *fork[(id + i) % max].time || value > *fork[i].eat)
-			return (pthread_mutex_unlock(fork[(id + i) % max].acces), 1);
-		pthread_mutex_unlock(fork[(id + i) % max].acces);
+		pthread_mutex_lock(fork[i].acces);
+		if (time > *fork[i].time)
+		{
+			if (value > *fork[i].eat)			
+				return (pthread_mutex_unlock(fork[i].acces), 1);
+		}
+		pthread_mutex_unlock(fork[i].acces);
 	}
 	return (0);
 }
@@ -50,7 +53,6 @@ int get_fork(int id, int syncro, int max, t_mutex *fork)
 	{
 		*fork[id % max].locked = 1;
 		pthread_mutex_unlock(fork[id % max].acces);
-
 		if (get_fork(id + 1, syncro - 1, max, fork))
 			return (1);
 		pthread_mutex_lock(fork[id % max].acces);
@@ -58,20 +60,6 @@ int get_fork(int id, int syncro, int max, t_mutex *fork)
 	}
 	pthread_mutex_unlock(fork[id % max].acces);
     return (0);
-}
-
-int		test_reset(int id, int syncro, int max, t_mutex *fork)
-{
-	if (!syncro)
-		return (1);
-	pthread_mutex_lock(fork[id % max].acces);
-	*fork[id % max].locked = 0;
-	*fork[id % max].value = 0;
-	*fork[id % max].finish = 0;
-	pthread_mutex_unlock(fork[id % max].acces);
-	if (test_reset(id + 1, syncro - 1, max, fork))
-		return (1);
-	return (0);
 }
 
 int		reset_fork(int id, int syncro, int max, t_mutex *fork)

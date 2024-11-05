@@ -79,7 +79,7 @@ void	sync_threads(int nbr, t_sothsync *sync)
 			soprintf("%ld \t%d\thas taken a fork\n", get_millis() - *sync->starting , i  + 1);
 			*sync->forks[i].value = 1;
 			*sync->forks[i].eat += 1;
-			*sync->forks[i].time = get_millis();
+			*sync->forks[i].time = get_millis() - *sync->starting;
 			pthread_mutex_unlock(sync->forks[i].acces);
 			pthread_mutex_unlock(sync->print.acces);
 		}

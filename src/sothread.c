@@ -111,7 +111,7 @@ void* sothread_routine(void* arg)
 	thread->millis = get_millis() - starting; // calcule le temps actuelle 
 	death = thread->millis + thread->timeout; // prepare la mort + le temps actuelle vue quelle est toujours pas lancé
 	// verification de la mort
-	while (thread->millis <= death)
+	while (thread->millis <= death + 10)
 	{
 		if (mutex(thread->fork, mutex_get_value, NULL))
 		{
@@ -138,7 +138,7 @@ void* sothread_routine(void* arg)
 	if (ret < 0)
 	{
 		pthread_mutex_lock(thread->print.acces);
-		soprintf("%ld \t%d\tdied\n", thread->millis, thread->id + 1);
+		soprintf("%C#fc0320(%ld \t%d\tdied)\n", thread->millis, thread->id + 1);
 		pthread_mutex_unlock(thread->print.acces);
 	}
 	pthread_mutex_lock(thread->acces.acces);
