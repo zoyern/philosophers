@@ -20,7 +20,7 @@ long	get_millis(void)
 	return ((time.tv_sec * 1000) + (time.tv_usec / 1000));
 }
 
-int		check_eat(int id, int syncro, int max, t_mutex *fork)
+int		check_eat(int id, int max, t_mutex *fork)
 {
 	int	i;
 	int	value;
@@ -31,7 +31,7 @@ int		check_eat(int id, int syncro, int max, t_mutex *fork)
 	value = *fork[id].eat;
 	time = *fork[id].time;
 	pthread_mutex_unlock(fork[id].acces);
-	while (++i < syncro)
+	while (++i < max)
 	{
 		pthread_mutex_lock(fork[(id + i) % max].acces);
 		if (time > *fork[(id + i) % max].time || value > *fork[i].eat)

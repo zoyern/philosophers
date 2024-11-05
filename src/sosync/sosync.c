@@ -75,7 +75,7 @@ void	sync_threads(int nbr, t_sothsync *sync)
 			reset_fork(j, sync->syncro, sync->nbr, sync->forks);
 		// regarde avec check_eat si il a plus de repas que les autre ou si son dernier repas a un temps plus élevé que les autres si il y a un plus faible 1 si c'est le plus faible 0
 		// get_fork permet de lock les fourchette de facon recursive si echou 0 si reussi a prendre toute ses fourchette 1
-		if (!check_eat(i,  sync->syncro, sync->nbr, sync->forks) && get_fork(i, sync->syncro, sync->nbr, sync->forks))
+		if (!check_eat(i, sync->nbr, sync->forks) && get_fork(i, sync->syncro, sync->nbr, sync->forks))
 		{
 			pthread_mutex_lock(sync->forks[i].acces);
 			pthread_mutex_lock(sync->print.acces);
@@ -86,6 +86,7 @@ void	sync_threads(int nbr, t_sothsync *sync)
 			*sync->forks[i].time = get_millis();
 			pthread_mutex_unlock(sync->forks[i].acces);
 			pthread_mutex_unlock(sync->print.acces);
+			i = -1;
 		}
 	}
 }

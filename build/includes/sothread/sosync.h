@@ -18,7 +18,7 @@
 void*		sothsync_routine(void* arg);
 void		sync_threads(int nbr, t_sothsync *sync);
 
-int			check_eat(int id, int syncro, int max, t_mutex *fork);
+int			check_eat(int id, int max, t_mutex *fork);
 int			get_fork(int id, int syncro, int max, t_mutex *fork);
 int			test_reset(int id, int syncro, int max, t_mutex *fork);
 int			reset_fork(int id, int syncro, int max, t_mutex *fork);
