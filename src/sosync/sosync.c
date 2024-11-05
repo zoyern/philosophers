@@ -64,18 +64,14 @@ void* sothsync_routine(void* arg)
 void	sync_threads(int nbr, t_sothsync *sync)
 {
 	int	i;
-	int	j;
 
 	i = -1;
 	while (++i < nbr) // id de ma fork 
 	{
-		j = -1;
 		// a chaque fois que je rentre dans ma loop je tente de tout reset si il y a un finish pour etre sur que je peux reprendre une fourchette
-		while (++j < nbr) // id de ma fork 
-			reset_fork(j, sync->syncro, sync->nbr, sync->forks);
 		// regarde avec check_eat si il a plus de repas que les autre ou si son dernier repas a un temps plus élevé que les autres si il y a un plus faible 1 si c'est le plus faible 0
 		// get_fork permet de lock les fourchette de facon recursive si echou 0 si reussi a prendre toute ses fourchette 1
-		if (!check_eat(i, sync->nbr, sync->forks) && get_fork(i, sync->syncro, sync->nbr, sync->forks))
+		if (!reset_fork(i, sync->syncro, sync->nbr, sync->forks) && !check_eat(i, sync->nbr, sync->forks) && get_fork(i, sync->syncro, sync->nbr, sync->forks))
 		{
 			pthread_mutex_lock(sync->forks[i].acces);
 			pthread_mutex_lock(sync->print.acces);
@@ -86,7 +82,6 @@ void	sync_threads(int nbr, t_sothsync *sync)
 			*sync->forks[i].time = get_millis();
 			pthread_mutex_unlock(sync->forks[i].acces);
 			pthread_mutex_unlock(sync->print.acces);
-			i = -1;
 		}
 	}
 }
