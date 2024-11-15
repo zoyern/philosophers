@@ -33,15 +33,6 @@ int	print_sleep_start(long time, t_sotask *task, t_philo *philo, t_sothread *thr
 	return (0);
 }
 
-void	th_free(t_sothread *thread)
-{
-	t_fork	*fork;
-
-	pthread_mutex_lock(thread->fork.instance);
-	fork = thread->fork.data;
-	fork->finish = 1;
-	pthread_mutex_unlock(thread->fork.instance);
-}
 
 int	print_eat_end(long time, t_sotask *task, t_philo *philo, t_sothread *thread)
 {

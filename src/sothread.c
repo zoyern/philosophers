@@ -119,30 +119,37 @@ int	get_work(t_sothread *thread, t_fork *fork)
 
 
 
+int	sothread_close(t_sothread *thread, int ret)
+{
+	t_fork	*fork;
+
+	fork = thread->fork.data;
+	fork->stop = ret;
+	return (ret);
+}
+
 void* sothread_routine(void* arg)
 {
     t_sothread *thread = (t_sothread *)arg;  // Cast de l'argument en entier
 	long		starting;
 	long		spawn_point;
-	int			ret;
 
-	// se lance quand sync a fini d'initialiser starting
 	if (thread->id == thread->nbr - 1)
 		pthread_mutex_unlock(thread->start);
 	starting = *(long *)mutget(thread->acces, thread->acces.starting);
 	spawn_point = get_millis() - starting;
-	ret = 0;
 	correct_delay(thread, thread->fork.data, spawn_point);
 	while (!(*(int *)mutget(thread->acces, thread->acces.locked)))
 	{
-		thread->millis = get_millis() - starting;
 		if (get_work(thread, thread->fork.data))
 		{
+			pthread_mutex_lock(thread->fork.instance);
+			thread->millis = get_millis() - starting;
 			if (thread->callback)
-				ret = thread->callback(thread, thread->data);
+				if (sothread_close(thread, thread->callback(thread, thread->data)))
+					return (pthread_mutex_unlock(thread->fork.instance), NULL);
+			pthread_mutex_unlock(thread->fork.instance);
 		}
-		if (ret)
-			break;
 	}
     return (NULL);
 }

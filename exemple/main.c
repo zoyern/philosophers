@@ -12,21 +12,12 @@
 
 #include "exemple.h"
 
-int	th_wait(t_sothread *thread, int exit)
+int	print_died(long time, int id, t_sothsync *sync)
 {
-	t_fork	*fork;
+	t_philo *philo;
 
-	pthread_mutex_lock(thread->fork.instance);
-	fork = thread->fork.data;
-	fork->work = 0;
-	fork->stop = exit;
-	pthread_mutex_unlock(thread->fork.instance);
-	return (exit);
-}
-
-int	print_died(long time, int id)
-{
-	soprintf("%ld \t%d\tdied\n", time, id + 1);
+	philo = sync->threads[id]->data;
+	soprintf("%ld \t%d\tdied loop : %d\n", time, id + 1, philo->tasks[id]->loop);
 	return (0);
 }
 
@@ -35,7 +26,7 @@ int	routine(t_sothread *thread, t_philo *philo)
 	if (sotask(thread->millis, philo->tasks[thread->id], thread))
 		th_wait(thread, 0);
 	if (philo->tasks[thread->id]->loop == philo->loop)
-		return (th_wait(thread, 1));
+		return (1);
 	return (0);
 }
 

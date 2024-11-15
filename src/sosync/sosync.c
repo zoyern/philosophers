@@ -13,6 +13,31 @@
 #include <sothread/all.h>
 #include <solibft/sostdlib.h>
 
+int	protect_modulo(int nbr, int mod)
+{
+	if (nbr > -1)
+		return (nbr % mod);
+	return (protect_modulo(mod - nbr, mod));
+}
+
+void	th_free(t_sothread *thread)
+{
+	t_fork	*fork;
+
+	fork = thread->fork.data;
+	fork->finish = 1;
+}
+
+int	th_wait(t_sothread *thread, int exit)
+{
+	t_fork	*fork;
+
+	fork = thread->fork.data;
+	fork->work = 0;
+	fork->stop = exit;
+	return (exit);
+}
+
 void	thsync_lock(t_sothsync *sync, int id, t_mutex *mutex)
 {
 	int	i;
@@ -22,11 +47,12 @@ void	thsync_lock(t_sothsync *sync, int id, t_mutex *mutex)
 	fork = mutex[id].data;
 	fork->work = 1;
 	fork->death += fork->timeout;
-	(*mutex->use)++;
+	(*mutex[id].use)++;
+	*mutex[id].last = get_millis() - *mutex[id].starting;
 	while (++i < sync->syncro)
 	{
-		soprintf("%ld \t%d\thas taken fork %d\n", get_millis() - *sync->acces.starting, id + 1, (id + i) % sync->nbr);
-		*mutex[(id + i) % sync->nbr].locked = 1;
+		soprintf("%ld \t%d\thas taken fork %d\n", get_millis() - *sync->acces.starting, id + 1, protect_modulo(id + i, sync->nbr) + 1);
+		*mutex[protect_modulo(id + i, sync->nbr)].locked = 1;
 	}
 }
 
@@ -38,9 +64,8 @@ void	thsync_unlock(t_sothsync *sync, int id, t_mutex *mutex)
 	i = -1;
 	fork = mutex[id].data;
 	fork->finish = 0;
-	*mutex[id].last = get_millis() - *mutex[id].starting;
 	while (++i < sync->syncro)
-		*mutex[(id + i) % sync->nbr].locked = 0;
+		*mutex[protect_modulo(id + i, sync->nbr)].locked = 0;
 }
 
 int	thsync_glouton(t_sothsync *sync, int id, t_mutex *mutex)
@@ -50,9 +75,13 @@ int	thsync_glouton(t_sothsync *sync, int id, t_mutex *mutex)
 	i = 0;
 	while (++i < sync->syncro)
 	{
-		if (*mutex[id].use > *mutex[(id - i) % sync->nbr].use || *mutex[id].last > *mutex[(id - i) % sync->nbr].last)
+		if (protect_modulo(id + i, sync->nbr) == id)
 			return (1);
-		if (*mutex[id].use > *mutex[(id + i) % sync->nbr].use || *mutex[id].last > *mutex[(id + i) % sync->nbr].last)
+		if (*mutex[protect_modulo(id + i, sync->nbr)].locked)
+			return (1);
+		if ((*mutex[id].use > *mutex[protect_modulo(id - i, sync->nbr)].use || *mutex[id].last > *mutex[protect_modulo(id - i, sync->nbr)].last) && !((t_fork *)(mutex[protect_modulo(id - i, sync->nbr)].data))->stop)
+			return (1);
+		if ((*mutex[id].use > *mutex[protect_modulo(id + i, sync->nbr)].use || *mutex[id].last > *mutex[protect_modulo(id + i, sync->nbr)].last) && !((t_fork *)(mutex[protect_modulo(id + i, sync->nbr)].data))->stop)
 			return (1);
 	}
 	return (0);

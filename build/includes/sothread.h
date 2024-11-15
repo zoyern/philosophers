@@ -27,4 +27,6 @@ int			mutex(t_mutex mutex, int (*callback)(), void *data);
 int			mutset(t_mutex mutex, int (*callback)(), void *dst, void *src);
 t_mutex		*new_mutexs(t_solib *solib, int nbr, void *data, int locked);
 t_mutex		new_mutex(t_solib *solib, void *data, int locked);
+void		th_free(t_sothread *thread);
+int			th_wait(t_sothread *thread, int exit);
 #endif              
