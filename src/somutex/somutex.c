@@ -13,49 +13,36 @@
 #include <sothread/all.h>
 
 
-int	mutex_get_value(t_mutex mutex)
+t_mutex	new_mutex(t_solib *solib, void *data, int locked)
 {
-	int	value;
+	t_mutex	mutex;
 
-	value = *mutex.value;
-	return (value);	
+	mutex.instance = somalloc(solib, sizeof(pthread_mutex_t));
+	mutex.locked = somalloc(solib, sizeof(int));
+	mutex.use = somalloc(solib, sizeof(int));
+	mutex.last = somalloc(solib, sizeof(long));
+	mutex.starting = somalloc(solib, sizeof(long));
+	*mutex.locked = 0;
+	*mutex.use = 0;
+	*mutex.last = 0;
+	*mutex.starting = get_millis();
+	mutex.data = data;
+	pthread_mutex_init(mutex.instance, NULL);
+	if (locked)
+		pthread_mutex_lock(mutex.instance);
+	return (mutex);
 }
 
-int	mutex_set_value(t_mutex mutex, int *value)
+t_mutex	*new_mutexs(t_solib *solib, int nbr, void *data, int locked)
 {
-	return (*mutex.value = *value, *mutex.value);
-}
-
-
-t_mutex	new_mutex(t_solib *solib, int locked, int value)
-{
-	t_mutex	fork;
-
-	fork.acces = somalloc(solib, sizeof(pthread_mutex_t));
-	fork.finish = somalloc(solib, sizeof(int));
-	fork.locked = somalloc(solib, sizeof(int));
-	fork.value = somalloc(solib, sizeof(int));
-	fork.eat = somalloc(solib, sizeof(int));
-	fork.time = somalloc(solib, sizeof(long));
-	pthread_mutex_init(fork.acces, NULL);
-	*fork.locked = locked;
-	*fork.eat = 0;
-	*fork.finish = 0;
-	*fork.time = 0;
-	*fork.value = value;
-	return (fork);
-}
-
-t_mutex	*new_mutexs(t_solib *solib, int nbr, int locked, int value)
-{
-	t_mutex	*forks;
+	t_mutex	*mutex;
 	int	i;
 
 	i = -1;
-	forks = somalloc(solib, sizeof(t_mutex) * nbr);
+	mutex = somalloc(solib, sizeof(t_mutex) * nbr);
 	while (++i < nbr)
-		forks[i] = new_mutex(solib, locked, value);
-	return (forks);
+		mutex[i] = new_mutex(solib, data, locked);
+	return (mutex);
 }
 
 int	mutex(t_mutex mutex, int (*callback)(), void *data)
@@ -63,11 +50,34 @@ int	mutex(t_mutex mutex, int (*callback)(), void *data)
 	int	ret;
 
 	ret = 0;
-	pthread_mutex_lock(mutex.acces);
+	pthread_mutex_lock(mutex.instance);
 	if (callback)
-	{
 		ret = callback(mutex, data);
-	}
-	pthread_mutex_unlock(mutex.acces);
+	pthread_mutex_unlock(mutex.instance);
+	return (ret);
+}
+
+void	*mutget(t_mutex mutex, void *data)
+{
+	void	*ret;
+
+	pthread_mutex_lock(mutex.instance);
+	if (data)
+		ret = data;
+	else
+		ret = NULL;
+	pthread_mutex_unlock(mutex.instance);
+	return (ret);
+}
+
+int	mutset(t_mutex mutex, int (*callback)(), void *dst, void *src)
+{
+	int	ret;
+
+	ret = 0;
+	pthread_mutex_lock(mutex.instance);
+	if (callback)
+		ret = callback(mutex, dst, src);
+	pthread_mutex_unlock(mutex.instance);
 	return (ret);
 }

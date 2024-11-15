@@ -24,29 +24,35 @@
 typedef struct s_sothread		t_sothread;
 typedef struct s_sothsync		t_sothsync;
 
+typedef struct s_fork {
+	long			timeout;
+	int				work; // acces partager
+	int				finish; // acces partager
+	int				death; 
+	int				stop; // acces partager
+} t_fork;
+
 typedef struct s_mutex {
-	pthread_mutex_t *acces;
-	int				*locked;
-	int				*finish;
-	int				*eat;
-	long			*time;
-	int				*value;
+	int				*locked; // si le mutex est lisib
+	int				*use; // si le mutex est lisib // + 1 a chaque mutset
+	long			*last; // si le mutex est lisib // se set a chaque mutset
+	long			*starting; // si le mutex est lisib // se set a chaque mutset
+	void			*data; // s'envoie directement dans le callback
+	pthread_mutex_t *instance; // le mutex en lui meme
 } t_mutex;
 
 typedef struct s_sothread {
 	t_solib         *solib;
 	pthread_t       instance;
 	int             id;
-	long            timeout;     // Temps avant la mort du philosophe
+	long			millis;
+	long			nbr;
 	void            *data;     // Données spécifiques à l'utilisateur (philosophe)
 	int             (*callback)(); // Routine du thread
-	long			*starting;
-	long			millis;
-	int				*value;
+	int             (*calldeath)(); // Routine du thread
 	t_mutex			fork;
-	t_mutex			print;     // Mutex pour l'affichage
 	t_mutex			acces;     // Mutex pour protéger l'accès aux ressources partagées
-	t_mutex			thread_acces;     // Mutex pour protéger l'accès aux ressources partagées
+	pthread_mutex_t	*start;
 } t_sothread;
 
 typedef struct s_sothsync {
@@ -54,13 +60,10 @@ typedef struct s_sothsync {
 	pthread_t       instance;
 	int             nbr;       // Nombre de philosophes (threads)
 	int             syncro;      // Nombre de fourchettes (ressources partagées) 4 
-	long			*starting;
-	int				*value;
-	t_sothread		**threads;
-	t_mutex			*forks; 
-	t_mutex			print;     // Mutex pour l'affichage
+	t_mutex			*forks;
 	t_mutex			acces;     // Mutex pour protéger l'accès aux ressources partagées
-	t_mutex			thread_acces;     // Mutex pour protéger l'accès aux ressources partagées
+	pthread_mutex_t	*start;     // Mutex pour protéger l'accès aux ressources partagées
+	t_sothread		**threads;
 } t_sothsync;
 
 #endif

@@ -11,90 +11,210 @@
 /* ************************************************************************** */
 
 #include <sothread/all.h>
+#include <solibft/sostdlib.h>
 
+void	thsync_lock(t_sothsync *sync, int id, t_mutex *mutex)
+{
+	int	i;
+	t_fork	*fork;
+	
+	i = -1;
+	fork = mutex[id].data;
+	fork->work = 1;
+	fork->death += fork->timeout;
+	(*mutex->use)++;
+	while (++i < sync->syncro)
+	{
+		soprintf("%ld \t%d\thas taken fork %d\n", get_millis() - *sync->acces.starting, id + 1, (id + i) % sync->nbr);
+		*mutex[(id + i) % sync->nbr].locked = 1;
+	}
+}
+
+void	thsync_unlock(t_sothsync *sync, int id, t_mutex *mutex)
+{
+	int	i;
+	t_fork	*fork;
+	
+	i = -1;
+	fork = mutex[id].data;
+	fork->finish = 0;
+	*mutex[id].last = get_millis() - *mutex[id].starting;
+	while (++i < sync->syncro)
+		*mutex[(id + i) % sync->nbr].locked = 0;
+}
+
+int	thsync_glouton(t_sothsync *sync, int id, t_mutex *mutex)
+{
+	int	i;
+	
+	i = 0;
+	while (++i < sync->syncro)
+	{
+		if (*mutex[id].use > *mutex[(id - i) % sync->nbr].use || *mutex[id].last > *mutex[(id - i) % sync->nbr].last)
+			return (1);
+		if (*mutex[id].use > *mutex[(id + i) % sync->nbr].use || *mutex[id].last > *mutex[(id + i) % sync->nbr].last)
+			return (1);
+	}
+	return (0);
+}
+
+void	thsync_finish(t_sothsync *sync, int id, t_mutex *mutex)
+{
+	t_fork	*fork;
+
+	fork = mutex[id].data;
+	if (fork->finish)
+		thsync_unlock(sync, id, mutex);
+}
+
+void	thsync_work(t_sothsync *sync, int id, t_mutex *mutex)
+{
+	t_fork	*fork;
+
+	fork = mutex[id].data;
+	if (!*mutex[id].locked && !fork->work && !fork->stop && !thsync_glouton(sync, id, mutex))
+		thsync_lock(sync, id, mutex);
+}
+
+void	thsync_calldeath(t_sothsync *sync, int id, long time)
+{
+	if (sync->threads[id]->calldeath)
+		sync->threads[id]->calldeath(time, id, sync, sync->threads);
+}
+
+int	thsync_death(t_sothsync *sync, t_mutex *mutex)
+{
+	int	i;
+	int	count;
+	t_fork	*fork;
+	long	time;
+	
+	i = -1;
+	count = 0;
+	time = get_millis() - *sync->acces.starting;
+	while (++i < sync->nbr)
+	{
+		fork = mutex[i].data;
+		if (fork->stop < 0 || time > fork->death)
+			return (thsync_calldeath(sync, i, time), 1);
+		if (fork->stop)
+			count++;
+	}
+	if (count == sync->nbr)
+		return (1);
+	return (0);
+}
+
+int	thsync_syncro(t_sothsync *sync)
+{
+	int	i;
+
+	if (thsync_death(sync, sync->forks))
+		return (1);
+	i = -1;
+	while (++i < sync->nbr)  // check si un fork est fini ou pas
+		thsync_finish(sync, i, sync->forks);
+	i = -1;
+	while (++i < sync->nbr)
+		thsync_work(sync, i, sync->forks);
+	return (0);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+t_fork	*new_thfork(t_solib *solib, long timeout)
+{
+	t_fork	*fork;
+
+	fork = somalloc(solib, sizeof(t_fork));
+	fork->timeout = timeout;
+	fork->work = 0;
+	fork->death = timeout;
+	fork->stop = 0;
+	return (fork);
+}
+
+t_mutex	*new_thsync_fork(t_solib *solib, int nbr, long timeout)
+{
+	t_mutex	*mutex;
+	int	i;
+
+	i = -1;
+	mutex = somalloc(solib, sizeof(t_mutex) * nbr);
+	while (++i < nbr)
+		mutex[i] = new_mutex(solib, new_thfork(solib, timeout), 1);
+	return (mutex);
+}
 
 // creation du monitor sync combien de thread il va géré avec la syncronisation (pour philosopher 2 mais peu etre 1, 4, 10 etc)
-t_sothsync	*sothsync(t_solib *solib, int nbr, int syncro)
+t_sothsync	*sothsync(t_solib *solib, int nbr, int syncro, char *timeout)
 {
 	t_sothsync	*sync;
+	int			*ret;
 
+	if (nbr < 1)
+		return (NULL);
 	sync = somalloc(solib, sizeof(t_sothsync));
+	sync->start = somalloc(solib, sizeof(pthread_mutex_t));
+	ret = somalloc(solib, sizeof(int));
+	*ret = 0;
 	sync->threads = somalloc(solib, sizeof(t_sothread *) * (nbr + 1));
-	sync->forks = new_mutexs(solib, nbr, 0, 0);
 	sync->threads[nbr] = NULL;
-	sync->print = new_mutex(solib, 0, 0);
-	sync->acces = new_mutex(solib, 0, 0);
-	sync->thread_acces = new_mutex(solib, 0, 0);
-	sync->starting = somalloc(NULL, sizeof(long));
-	sync->value = somalloc(NULL, sizeof(int));
+	pthread_mutex_init(sync->start, NULL);
+	sync->forks = new_thsync_fork(solib, nbr, ft_atoi(timeout));
+	sync->acces = new_mutex(solib, ret, 0);
 	sync->solib = solib;
 	sync->nbr = nbr;
 	sync->syncro = syncro;
-	*sync->value = 0;
-	*sync->starting = get_millis();
-	pthread_mutex_lock(sync->acces.acces);
-	pthread_mutex_lock(sync->thread_acces.acces);
+	pthread_mutex_lock(sync->acces.instance);
+	pthread_mutex_lock(sync->start);
 	if (pthread_create(&sync->instance, NULL, sothsync_routine, sync))
        	return (solib->close(solib, 1), NULL);
     pthread_detach(sync->instance);
 	return (sync);
 }
 
-// routine du monitor permet d'arreté les thread si -1 et calcule de nombre de 1 pour l'arret normal avec loop
+
+
 void* sothsync_routine(void* arg)
 {
     t_sothsync *sync = (t_sothsync *)arg;  // Cast de l'argument en entier
-	int		value;
+	long	starting;
+	int		i;
 
-	mutex(sync->acces, NULL, NULL);
-	*sync->starting = get_millis();
-	pthread_mutex_unlock(sync->thread_acces.acces);
-	value = 0;
-	while (!value)
+	pthread_mutex_lock(sync->start);
+	starting = get_millis();
+	*sync->acces.starting = starting; // le millis de acces permet d'avoir le start
+	pthread_mutex_unlock(sync->acces.instance);
+	while (!(*(int *)mutget(sync->acces, sync->acces.locked)))
 	{
-		//permet de donné les fourchette
-		sync_threads(sync->nbr, sync);
-		pthread_mutex_lock(sync->acces.acces);
-		value = *sync->value;
-		pthread_mutex_unlock(sync->acces.acces);
+		i = -1;
+		while (++i < sync->nbr)
+			pthread_mutex_lock(sync->forks[i].instance);
+		pthread_mutex_lock(sync->acces.instance);
+		if (thsync_syncro(sync))
+			*sync->acces.locked = 1;
+		pthread_mutex_unlock(sync->acces.instance);
+		i = -1;
+		while (++i < sync->nbr)
+			pthread_mutex_unlock(sync->forks[i].instance);
 	}
+	pthread_mutex_lock(sync->acces.instance);
+	*(int *)(sync->acces.data) = 1;
+	pthread_mutex_unlock(sync->acces.instance);
     return (NULL);
-}
-
-void	sync_threads(int nbr, t_sothsync *sync)
-{
-	int	i;
-
-	i = -1;
-	while (++i < nbr) // id de ma fork 
-	{
-		// a chaque fois que je rentre dans ma loop je tente de tout reset si il y a un finish pour etre sur que je peux reprendre une fourchette
-		// regarde avec check_eat si il a plus de repas que les autre ou si son dernier repas a un temps plus élevé que les autres si il y a un plus faible 1 si c'est le plus faible 0
-		// get_fork permet de lock les fourchette de facon recursive si echou 0 si reussi a prendre toute ses fourchette 1
-		if (!reset_fork(i, sync->syncro, sync->nbr, sync->forks) && !check_eat(i, sync->nbr, sync->forks) && get_fork(i, sync->syncro, sync->nbr, sync->forks))
-		{
-			pthread_mutex_lock(sync->forks[i].acces);
-			pthread_mutex_lock(sync->print.acces);
-			soprintf("%ld \t%d\thas taken a fork\n", get_millis() - *sync->starting , i  + 1);
-			soprintf("%ld \t%d\thas taken a fork\n", get_millis() - *sync->starting , i  + 1);
-			*sync->forks[i].value = 1;
-			*sync->forks[i].eat += 1;
-			*sync->forks[i].time = get_millis() - *sync->starting;
-			pthread_mutex_unlock(sync->forks[i].acces);
-			pthread_mutex_unlock(sync->print.acces);
-		}
-	}
-}
-
-
-//permet d'arreté le thread en cours pour qu'il se mettent a vouloir une fourchette
-// ou arret de la rétention de la fourchette dans pour autant arreté le thread
-int	sothpause(t_sothread *thread, int value, int finish)
-{
-	pthread_mutex_lock(thread->fork.acces);
-	*thread->fork.value = value;
-	*thread->fork.finish = finish;
-	*thread->fork.locked = 0;
-	pthread_mutex_unlock(thread->fork.acces);
-	return (0);
 }

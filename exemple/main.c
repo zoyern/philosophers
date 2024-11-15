@@ -12,12 +12,30 @@
 
 #include "exemple.h"
 
+int	th_wait(t_sothread *thread, int exit)
+{
+	t_fork	*fork;
+
+	pthread_mutex_lock(thread->fork.instance);
+	fork = thread->fork.data;
+	fork->work = 0;
+	fork->stop = exit;
+	pthread_mutex_unlock(thread->fork.instance);
+	return (exit);
+}
+
+int	print_died(long time, int id)
+{
+	soprintf("%ld \t%d\tdied\n", time, id + 1);
+	return (0);
+}
+
 int	routine(t_sothread *thread, t_philo *philo)
 {
 	if (sotask(thread->millis, philo->tasks[thread->id], thread))
-		sothpause(thread, 0, 0);
+		th_wait(thread, 0);
 	if (philo->tasks[thread->id]->loop == philo->loop)
-		return (1);
+		return (th_wait(thread, 1));
 	return (0);
 }
 
@@ -42,7 +60,10 @@ t_philo	*new_philo(t_solib *solib, int nbr_loop, char **times, int nbr)
 	return (philo);
 }
 
-int philosophers(t_solib *solib, int nbr, char **times, int nbr_loop) {
+
+
+int philosophers(t_solib *solib, int nbr, char **times, int nbr_loop)
+{
 
 	t_philo		*philo;
 	t_sothsync	*syncs;
@@ -51,9 +72,9 @@ int philosophers(t_solib *solib, int nbr, char **times, int nbr_loop) {
 	// creation de la data philo
 	philo = new_philo(solib, nbr_loop, times, nbr);
 	// creation des thread avec sothreads pour plusieurs thread et sothsync pour la syncronisation est obligatoire c'est le monitor
-	syncs = sothreads(sothsync(solib, nbr, 2), times[0], routine, philo);
+	syncs = sothreads(sothsync(solib, nbr, 2, times[0]), routine, print_died, philo);
 	//attente de la fin des threads
-	wait_sothread(syncs);
+	wait_sothread(syncs, NULL, NULL, NULL);
 	return (0);
 }
 

@@ -17,9 +17,9 @@ int	print_eat_start(long time, t_sotask *task, t_philo *philo, t_sothread *threa
 	(void)time;
 	(void)task;
 	(void)philo;
-	pthread_mutex_lock(thread->print.acces);
+	pthread_mutex_lock(thread->acces.instance);
 	soprintf("%ld \t%d\tis eating\n", time, thread->id + 1);
-	pthread_mutex_unlock(thread->print.acces);
+	pthread_mutex_unlock(thread->acces.instance);
 	return (0);
 }
 int	print_sleep_start(long time, t_sotask *task, t_philo *philo, t_sothread *thread)
@@ -27,11 +27,20 @@ int	print_sleep_start(long time, t_sotask *task, t_philo *philo, t_sothread *thr
 	(void)time;
 	(void)task;
 	(void)philo;
-	pthread_mutex_lock(thread->print.acces);
+	pthread_mutex_lock(thread->acces.instance);
 	soprintf("%ld \t%d\tis sleeping\n", time, thread->id + 1);
-	pthread_mutex_unlock(thread->print.acces);
-	sothpause(thread, 1, 1);
+	pthread_mutex_unlock(thread->acces.instance);
 	return (0);
+}
+
+void	th_free(t_sothread *thread)
+{
+	t_fork	*fork;
+
+	pthread_mutex_lock(thread->fork.instance);
+	fork = thread->fork.data;
+	fork->finish = 1;
+	pthread_mutex_unlock(thread->fork.instance);
 }
 
 int	print_eat_end(long time, t_sotask *task, t_philo *philo, t_sothread *thread)
@@ -39,7 +48,7 @@ int	print_eat_end(long time, t_sotask *task, t_philo *philo, t_sothread *thread)
 	(void)time;
 	(void)task;
 	(void)philo;
-	(void)thread;
+	th_free(thread);
 	return (0);
 }
 
@@ -48,8 +57,8 @@ int	print_think_start(long time, t_sotask *task, t_philo *philo, t_sothread *thr
 	(void)time;
 	(void)task;
 	(void)philo;
-	pthread_mutex_lock(thread->print.acces);
+	pthread_mutex_lock(thread->acces.instance);
 	soprintf("%ld \t%d\tis thinking\n", time, thread->id + 1);
-	pthread_mutex_unlock(thread->print.acces);
+	pthread_mutex_unlock(thread->acces.instance);
 	return (0);
 }

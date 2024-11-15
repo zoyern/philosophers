@@ -17,10 +17,14 @@
 
 
 long		get_millis(void);
-int			wait_sothread(t_sothsync *sync);
-t_sothread	*sonew_thread(t_sothsync *sync, long timeout, int (*callback)(), void *data);
-t_sothsync	*sothread(t_solib *solib, char *timeout, int (*callback)(), void *data);
-t_sothsync	*sothreads(t_sothsync *sync, char *timeout, int (*callback)(), void *data);
-int			sothpause(t_sothread *thread, int value, int finish);
-t_sothsync	*sothsync(t_solib *solib, int nbr, int syncro);
-#endif
+int			wait_sothread(t_sothsync *sync, int (*callback)(), void *data, int *status);
+t_sothread	*sonew_thread(t_sothsync *sync, int (*callback)(), int (*calldeath)(), void *data);
+t_sothsync	*sothread(t_sothsync *sync, int (*callback)(), int (*calldeath)(), void *data);
+t_sothsync	*sothreads(t_sothsync *sync, int (*callback)(), int (*calldeath)(), void *data);
+t_sothsync	*sothsync(t_solib *solib, int nbr, int syncro, char *timeout);
+void		*mutget(t_mutex mutex, void *data);
+int			mutex(t_mutex mutex, int (*callback)(), void *data);
+int			mutset(t_mutex mutex, int (*callback)(), void *dst, void *src);
+t_mutex		*new_mutexs(t_solib *solib, int nbr, void *data, int locked);
+t_mutex		new_mutex(t_solib *solib, void *data, int locked);
+#endif              
