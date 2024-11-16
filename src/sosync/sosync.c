@@ -48,7 +48,7 @@ void	thsync_lock(t_sothsync *sync, int id, t_mutex *mutex, long time)
 	fork->work = 1;
 	fork->death = time + fork->timeout;
 	(*mutex[id].use)++;
-	*mutex[id].last = time;
+	*mutex[id].last = time + 1;
 	while (++i < sync->syncro)
 	{
 		soprintf("%ld \t%d\thas taken a fork\n", time, id + 1);
@@ -92,7 +92,7 @@ void	thsync_finish(t_sothsync *sync, int id, t_mutex *mutex)
 	t_fork	*fork;
 
 	fork = mutex[id].data;
-	if (fork->finish)
+	if (fork && fork->finish)
 		thsync_unlock(sync, id, mutex);
 }
 
@@ -122,15 +122,17 @@ int	thsync_death(t_sothsync *sync, t_mutex *mutex, long time)
 	while (++i < sync->nbr)
 	{
 		pthread_mutex_lock(mutex[i].instance);
+		pthread_mutex_lock(sync->acces.instance);
 		fork = mutex[i].data;
 		if (fork->stop < 0 || (time > fork->death && !fork->stop))
-			return (thsync_calldeath(sync, i, time), pthread_mutex_unlock(mutex[i].instance), 1);
+			return (*sync->acces.locked = 1, thsync_calldeath(sync, i, time), pthread_mutex_unlock(sync->acces.instance), pthread_mutex_unlock(mutex[i].instance), 1);
 		if (fork->stop)
 			count++;
+		if (count == sync->nbr)
+			*sync->acces.locked = 1;
+		pthread_mutex_unlock(sync->acces.instance);
 		pthread_mutex_unlock(mutex[i].instance);
 	}
-	if (count == sync->nbr)
-		return (1);
 	return (0);
 }
 
@@ -228,7 +230,6 @@ void* sothsync_routine(void* arg)
     t_sothsync *sync = (t_sothsync *)arg;  // Cast de l'argument en entier
 	long	starting;
 	int		value;
-	long	time;
 
 	pthread_mutex_lock(sync->acces.instance);
 	pthread_mutex_lock(sync->start);
@@ -237,18 +238,12 @@ void* sothsync_routine(void* arg)
 	*sync->acces.starting = starting; // le millis de acces permet d'avoir le start
 	value = *sync->acces.locked;
 	pthread_mutex_unlock(sync->acces.instance);
-	time = get_millis() - starting;
 	while (!value)
 	{
 		//soprintf("time : %ld\n", time);
-		if (thsync_syncro(sync, time))
-		{
-			pthread_mutex_lock(sync->acces.instance);
-			*sync->acces.locked = 1;
-			pthread_mutex_unlock(sync->acces.instance);
-		}
+		if (thsync_syncro(sync, get_millis() - starting))
+			break ;
 		value = *(int *)mutget(sync->acces, sync->acces.locked);
-		time = get_millis() - starting;
 	}
 	pthread_mutex_lock(sync->acces.instance);
 	*(int *)(sync->acces.data) = 1;

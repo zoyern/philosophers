@@ -102,13 +102,15 @@ t_sothsync	*sothreads(t_sothsync *sync, int (*callback)(), int (*calldeath)(), v
 void	correct_delay(t_sothread *thread, t_fork *fork, long delay)
 {
 	fork->death += delay;
+	fork->timeout += delay;
 	pthread_mutex_unlock(thread->fork.instance);
 }
 
-int	get_work(t_sothread *thread, t_fork *fork)
+int	get_work(t_sothread *thread, t_fork *fork, long starting)
 {
 	int	ret;
 
+	thread->millis = get_millis() - starting;
 	pthread_mutex_lock(thread->fork.instance);
 	ret = fork->work;
 	if (!ret)
@@ -147,16 +149,15 @@ void* sothread_routine(void* arg)
 	correct_delay(thread, thread->fork.data, spawn_point);
 	while (1)
 	{
-		if (get_work(thread, thread->fork.data))
+		if ((*(int *)mutget(thread->acces, thread->acces.locked)))
+			break;
+		if (get_work(thread, thread->fork.data, starting))
 		{
-			thread->millis = get_millis() - starting;
 			if (thread->callback)
 				if (sothread_close(thread, thread->callback(thread, thread->data)))
 					return (pthread_mutex_unlock(thread->fork.instance), NULL);
 			pthread_mutex_unlock(thread->fork.instance);
 		}
-		if ((*(int *)mutget(thread->acces, thread->acces.locked)))
-			break;
 	}
     return (NULL);
 }
