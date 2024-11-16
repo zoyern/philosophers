@@ -17,9 +17,7 @@ int	print_eat_start(long time, t_sotask *task, t_philo *philo, t_sothread *threa
 	(void)time;
 	(void)task;
 	(void)philo;
-	pthread_mutex_lock(thread->acces.instance);
-	soprintf("%ld \t%d\tis eating\n", time, thread->id + 1);
-	pthread_mutex_unlock(thread->acces.instance);
+	(void)thread;
 	return (0);
 }
 int	print_sleep_start(long time, t_sotask *task, t_philo *philo, t_sothread *thread)

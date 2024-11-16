@@ -54,6 +54,7 @@ void	thsync_lock(t_sothsync *sync, int id, t_mutex *mutex, long time)
 		soprintf("%ld \t%d\thas taken a fork\n", time, id + 1);
 		*mutex[protect_modulo(id + i, sync->nbr)].locked = 1;
 	}
+	soprintf("%ld \t%d\tis eating\n", time, id + 1);
 }
 
 void	thsync_unlock(t_sothsync *sync, int id, t_mutex *mutex)
