@@ -19,22 +19,26 @@
 
 
 //attente de la fin des thread avec le monitor
-int	wait_sothread(t_sothsync *sync, int (*callback)(), void *data, int *status)
+int	wait_sothread(t_sothsync *sync, int (*callback)(), void *data)
 {
-	int		value;
+	int	value;
+	int	i;
 
-	(void)sync;
-	(void)callback;
-	(void)data;
-	(void)status;
-	value = 0;
 	if (!sync)
 		return (0);
-	while (!(*(int *)mutget(sync->acces, sync->acces.data)))
+	value = *(int *)mutget(sync->acces, sync->acces.data);
+	while (!value)
 	{
 		if (callback)
 			callback(sync, data);
+		value = *(int *)mutget(sync->acces, sync->acces.data);
 	}
+	free_mutex(sync->solib, sync->acces);
+	i = -1;
+	while (++i < sync->nbr)
+		sofree(sync->solib, sync->threads[i]);
+	sofree(sync->solib, sync->threads);
+	sofree(sync->solib, sync);
 	return (value);
 }
 
@@ -107,7 +111,8 @@ int	get_work(t_sothread *thread, t_fork *fork)
 
 	pthread_mutex_lock(thread->fork.instance);
 	ret = fork->work;
-	pthread_mutex_unlock(thread->fork.instance);
+	if (!ret)
+		pthread_mutex_unlock(thread->fork.instance);
 	return (ret);
 }
 
@@ -134,22 +139,24 @@ void* sothread_routine(void* arg)
 	long		starting;
 	long		spawn_point;
 
+	pthread_mutex_lock(thread->fork.instance);
 	if (thread->id == thread->nbr - 1)
 		pthread_mutex_unlock(thread->start);
 	starting = *(long *)mutget(thread->acces, thread->acces.starting);
 	spawn_point = get_millis() - starting;
 	correct_delay(thread, thread->fork.data, spawn_point);
-	while (!(*(int *)mutget(thread->acces, thread->acces.locked)))
+	while (1)
 	{
 		if (get_work(thread, thread->fork.data))
 		{
-			pthread_mutex_lock(thread->fork.instance);
 			thread->millis = get_millis() - starting;
 			if (thread->callback)
 				if (sothread_close(thread, thread->callback(thread, thread->data)))
 					return (pthread_mutex_unlock(thread->fork.instance), NULL);
 			pthread_mutex_unlock(thread->fork.instance);
 		}
+		if ((*(int *)mutget(thread->acces, thread->acces.locked)))
+			break;
 	}
     return (NULL);
 }

@@ -38,7 +38,7 @@ int	th_wait(t_sothread *thread, int exit)
 	return (exit);
 }
 
-void	thsync_lock(t_sothsync *sync, int id, t_mutex *mutex)
+void	thsync_lock(t_sothsync *sync, int id, t_mutex *mutex, long time)
 {
 	int	i;
 	t_fork	*fork;
@@ -46,12 +46,12 @@ void	thsync_lock(t_sothsync *sync, int id, t_mutex *mutex)
 	i = -1;
 	fork = mutex[id].data;
 	fork->work = 1;
-	fork->death += fork->timeout;
+	fork->death = time + fork->timeout;
 	(*mutex[id].use)++;
-	*mutex[id].last = get_millis() - *mutex[id].starting;
+	*mutex[id].last = time;
 	while (++i < sync->syncro)
 	{
-		soprintf("%ld \t%d\thas taken fork %d\n", get_millis() - *sync->acces.starting, id + 1, protect_modulo(id + i, sync->nbr) + 1);
+		soprintf("%ld \t%d\thas taken a fork\n", time, id + 1);
 		*mutex[protect_modulo(id + i, sync->nbr)].locked = 1;
 	}
 }
@@ -96,13 +96,13 @@ void	thsync_finish(t_sothsync *sync, int id, t_mutex *mutex)
 		thsync_unlock(sync, id, mutex);
 }
 
-void	thsync_work(t_sothsync *sync, int id, t_mutex *mutex)
+void	thsync_work(t_sothsync *sync, int id, t_mutex *mutex, long time)
 {
 	t_fork	*fork;
 
 	fork = mutex[id].data;
 	if (!*mutex[id].locked && !fork->work && !fork->stop && !thsync_glouton(sync, id, mutex))
-		thsync_lock(sync, id, mutex);
+		thsync_lock(sync, id, mutex, time);
 }
 
 void	thsync_calldeath(t_sothsync *sync, int id, long time)
@@ -111,41 +111,47 @@ void	thsync_calldeath(t_sothsync *sync, int id, long time)
 		sync->threads[id]->calldeath(time, id, sync, sync->threads);
 }
 
-int	thsync_death(t_sothsync *sync, t_mutex *mutex)
+int	thsync_death(t_sothsync *sync, t_mutex *mutex, long time)
 {
 	int	i;
 	int	count;
 	t_fork	*fork;
-	long	time;
 	
 	i = -1;
 	count = 0;
-	time = get_millis() - *sync->acces.starting;
 	while (++i < sync->nbr)
 	{
+		pthread_mutex_lock(mutex[i].instance);
 		fork = mutex[i].data;
-		if (fork->stop < 0 || time > fork->death)
-			return (thsync_calldeath(sync, i, time), 1);
+		if (fork->stop < 0 || (time > fork->death && !fork->stop))
+			return (thsync_calldeath(sync, i, time), pthread_mutex_unlock(mutex[i].instance), 1);
 		if (fork->stop)
 			count++;
+		pthread_mutex_unlock(mutex[i].instance);
 	}
 	if (count == sync->nbr)
 		return (1);
 	return (0);
 }
 
-int	thsync_syncro(t_sothsync *sync)
+int	thsync_syncro(t_sothsync *sync, long time)
 {
 	int	i;
 
-	if (thsync_death(sync, sync->forks))
+	if (thsync_death(sync, sync->forks, time))
 		return (1);
+	i = -1;
+	while (++i < sync->nbr)
+		pthread_mutex_lock(sync->forks[i].instance);
 	i = -1;
 	while (++i < sync->nbr)  // check si un fork est fini ou pas
 		thsync_finish(sync, i, sync->forks);
 	i = -1;
 	while (++i < sync->nbr)
-		thsync_work(sync, i, sync->forks);
+		thsync_work(sync, i, sync->forks, time);
+	i = -1;
+	while (++i < sync->nbr)
+		pthread_mutex_unlock(sync->forks[i].instance);
 	return (0);
 }
 
@@ -185,7 +191,7 @@ t_mutex	*new_thsync_fork(t_solib *solib, int nbr, long timeout)
 	i = -1;
 	mutex = somalloc(solib, sizeof(t_mutex) * nbr);
 	while (++i < nbr)
-		mutex[i] = new_mutex(solib, new_thfork(solib, timeout), 1);
+		mutex[i] = new_mutex(solib, new_thfork(solib, timeout), 0);
 	return (mutex);
 }
 
@@ -209,7 +215,6 @@ t_sothsync	*sothsync(t_solib *solib, int nbr, int syncro, char *timeout)
 	sync->solib = solib;
 	sync->nbr = nbr;
 	sync->syncro = syncro;
-	pthread_mutex_lock(sync->acces.instance);
 	pthread_mutex_lock(sync->start);
 	if (pthread_create(&sync->instance, NULL, sothsync_routine, sync))
        	return (solib->close(solib, 1), NULL);
@@ -218,32 +223,37 @@ t_sothsync	*sothsync(t_solib *solib, int nbr, int syncro, char *timeout)
 }
 
 
-
 void* sothsync_routine(void* arg)
 {
     t_sothsync *sync = (t_sothsync *)arg;  // Cast de l'argument en entier
 	long	starting;
-	int		i;
+	int		value;
+	long	time;
 
+	pthread_mutex_lock(sync->acces.instance);
 	pthread_mutex_lock(sync->start);
+	pthread_mutex_unlock(sync->start);
 	starting = get_millis();
 	*sync->acces.starting = starting; // le millis de acces permet d'avoir le start
+	value = *sync->acces.locked;
 	pthread_mutex_unlock(sync->acces.instance);
-	while (!(*(int *)mutget(sync->acces, sync->acces.locked)))
+	time = get_millis() - starting;
+	while (!value)
 	{
-		i = -1;
-		while (++i < sync->nbr)
-			pthread_mutex_lock(sync->forks[i].instance);
-		pthread_mutex_lock(sync->acces.instance);
-		if (thsync_syncro(sync))
+		//soprintf("time : %ld\n", time);
+		if (thsync_syncro(sync, time))
+		{
+			pthread_mutex_lock(sync->acces.instance);
 			*sync->acces.locked = 1;
-		pthread_mutex_unlock(sync->acces.instance);
-		i = -1;
-		while (++i < sync->nbr)
-			pthread_mutex_unlock(sync->forks[i].instance);
+			pthread_mutex_unlock(sync->acces.instance);
+		}
+		value = *(int *)mutget(sync->acces, sync->acces.locked);
+		time = get_millis() - starting;
 	}
 	pthread_mutex_lock(sync->acces.instance);
 	*(int *)(sync->acces.data) = 1;
+	pthread_mutex_destroy(sync->start);
+	free_mutexs(sync->solib, sync->nbr, sync->forks);
 	pthread_mutex_unlock(sync->acces.instance);
     return (NULL);
 }

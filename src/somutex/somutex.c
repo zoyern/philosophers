@@ -13,6 +13,26 @@
 #include <sothread/all.h>
 
 
+void	free_mutex(t_solib *solib, t_mutex mutex)
+{
+	pthread_mutex_lock(mutex.instance);
+	sofree(solib, mutex.locked);
+	sofree(solib, mutex.use);
+	sofree(solib, mutex.last);
+	sofree(solib, mutex.starting);
+	pthread_mutex_unlock(mutex.instance);
+	pthread_mutex_destroy(mutex.instance);
+}
+
+void	free_mutexs(t_solib *solib, int nbr, t_mutex *mutex)
+{
+	int	i;
+
+	i = -1;
+	while (++i < nbr)
+		free_mutex(solib, mutex[i]);
+}
+
 t_mutex	new_mutex(t_solib *solib, void *data, int locked)
 {
 	t_mutex	mutex;

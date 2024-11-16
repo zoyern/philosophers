@@ -12,12 +12,9 @@
 
 #include "exemple.h"
 
-int	print_died(long time, int id, t_sothsync *sync)
+int	print_died(long time, int id)
 {
-	t_philo *philo;
-
-	philo = sync->threads[id]->data;
-	soprintf("%ld \t%d\tdied loop : %d\n", time, id + 1, philo->tasks[id]->loop);
+	soprintf("%ld \t%d\tdied\n", time, id + 1);
 	return (0);
 }
 
@@ -65,7 +62,7 @@ int philosophers(t_solib *solib, int nbr, char **times, int nbr_loop)
 	// creation des thread avec sothreads pour plusieurs thread et sothsync pour la syncronisation est obligatoire c'est le monitor
 	syncs = sothreads(sothsync(solib, nbr, 2, times[0]), routine, print_died, philo);
 	//attente de la fin des threads
-	wait_sothread(syncs, NULL, NULL, NULL);
+	wait_sothread(syncs, NULL, NULL);
 	return (0);
 }
 
