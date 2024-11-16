@@ -18,6 +18,6 @@
 # include <sothread/sosync.h>
 # include <sothread/somutex.h>
 
-void* sothread_routine(void* arg);
+void	*sothread_routine(void *arg);
 
 #endif

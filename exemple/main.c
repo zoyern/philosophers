@@ -12,22 +12,6 @@
 
 #include "exemple.h"
 
-int	print_died(long time, int id)
-{
-	soprintf("%ld \t%d\tdied\n", time, id + 1);
-	return (0);
-}
-
-int	routine(t_sothread *thread, t_philo *philo)
-{
-	if (sotask(thread->millis, philo->tasks[thread->id], thread))
-		th_wait(thread, 0);
-	if (philo->tasks[thread->id]->loop == philo->loop)
-		return (1);
-	return (0);
-}
-
-//creation des task et des callback ascocier stockage de loop
 t_philo	*new_philo(t_solib *solib, int nbr_loop, char **times, int nbr)
 {
 	t_philo	*philo;
@@ -41,27 +25,24 @@ t_philo	*new_philo(t_solib *solib, int nbr_loop, char **times, int nbr)
 	while (++i < nbr)
 	{
 		philo->tasks[i] = sotask_list(solib);
-		sotask_add(philo->tasks[i], 0, sonew_task(solib, times[1], sofuncs(print_eat_start, NULL, print_eat_end), philo));
-		sotask_add(philo->tasks[i], 1, sonew_task(solib, times[2], sofuncs(print_sleep_start, NULL, NULL), philo));
-		sotask_add(philo->tasks[i], 2, sonew_task(solib, times[3], sofuncs(print_think_start, NULL, NULL), philo));
+		sotask_add(philo->tasks[i], 0, sonew_task(solib, times[1],
+				sofuncs(NULL, NULL, print_eat_end), philo));
+		sotask_add(philo->tasks[i], 1, sonew_task(solib, times[2],
+				sofuncs(print_sleep_start, NULL, NULL), philo));
+		sotask_add(philo->tasks[i], 2, sonew_task(solib, times[3],
+				sofuncs(print_think_start, NULL, NULL), philo));
 	}
 	return (philo);
 }
 
-
-
-int philosophers(t_solib *solib, int nbr, char **times, int nbr_loop)
+int	philosophers(t_solib *solib, int nbr, char **times, int nbr_loop)
 {
-
 	t_philo		*philo;
 	t_sothsync	*syncs;
 
-
-	// creation de la data philo
 	philo = new_philo(solib, nbr_loop, times, nbr);
-	// creation des thread avec sothreads pour plusieurs thread et sothsync pour la syncronisation est obligatoire c'est le monitor
-	syncs = sothreads(sothsync(solib, nbr, 2, times[0]), routine, print_died, philo);
-	//attente de la fin des threads
+	syncs = sothreads(sothsync(solib, nbr, 2, times[0]),
+			routine, print_died, philo);
 	wait_sothread(syncs, NULL, NULL);
 	return (0);
 }

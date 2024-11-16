@@ -12,7 +12,6 @@
 
 #include <sothread/all.h>
 
-
 void	free_mutex(t_solib *solib, t_mutex mutex)
 {
 	pthread_mutex_lock(mutex.instance);
@@ -56,25 +55,13 @@ t_mutex	new_mutex(t_solib *solib, void *data, int locked)
 t_mutex	*new_mutexs(t_solib *solib, int nbr, void *data, int locked)
 {
 	t_mutex	*mutex;
-	int	i;
+	int		i;
 
 	i = -1;
 	mutex = somalloc(solib, sizeof(t_mutex) * nbr);
 	while (++i < nbr)
 		mutex[i] = new_mutex(solib, data, locked);
 	return (mutex);
-}
-
-int	mutex(t_mutex mutex, int (*callback)(), void *data)
-{
-	int	ret;
-
-	ret = 0;
-	pthread_mutex_lock(mutex.instance);
-	if (callback)
-		ret = callback(mutex, data);
-	pthread_mutex_unlock(mutex.instance);
-	return (ret);
 }
 
 void	*mutget(t_mutex mutex, void *data)
@@ -86,18 +73,6 @@ void	*mutget(t_mutex mutex, void *data)
 		ret = data;
 	else
 		ret = NULL;
-	pthread_mutex_unlock(mutex.instance);
-	return (ret);
-}
-
-int	mutset(t_mutex mutex, int (*callback)(), void *dst, void *src)
-{
-	int	ret;
-
-	ret = 0;
-	pthread_mutex_lock(mutex.instance);
-	if (callback)
-		ret = callback(mutex, dst, src);
 	pthread_mutex_unlock(mutex.instance);
 	return (ret);
 }

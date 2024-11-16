@@ -20,14 +20,19 @@
 # include <solibft/sostdlib.h>
 # include <sothread.h>
 
-typedef struct s_philo {
-	int	loop;
+typedef struct s_philo
+{
+	int			loop;
 	t_sotasks	**tasks;
-} t_philo;
+}	t_philo;
 
-int	print_eat_start(long time, t_sotask *task, t_philo *philo, t_sothread *thread);
-int	print_sleep_start(long time, t_sotask *task, t_philo *philo, t_sothread *thread);
-int	print_eat_end(long time, t_sotask *task, t_philo *philo, t_sothread *thread);
-int	print_think_start(long time, t_sotask *task, t_philo *philo, t_sothread *thread);
+int	print_died(long time, int id);
+int	routine(t_sothread *thread, t_philo *philo);
+int	print_sleep_start(long time, t_sotask *task,
+		t_philo *philo, t_sothread *thread);
+int	print_eat_end(long time, t_sotask *task,
+		t_philo *philo, t_sothread *thread);
+int	print_think_start(long time, t_sotask *task,
+		t_philo *philo, t_sothread *thread);
 
 #endif
