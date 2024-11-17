@@ -56,6 +56,8 @@ int	argv_is_numeric(t_solib *solib)
 	while (solib->env->argv[i])
 	{
 		j = 0;
+		if (ft_strlen(solib->env->argv[i]) > 10)
+			return (0);
 		if (solib->libft->atoi(solib->env->argv[i]) < 0)
 			return (0);
 		while (solib->env->argv[i][j])
