@@ -17,6 +17,8 @@ int	thsync_syncro(t_sothsync *sync, long starting)
 {
 	int	i;
 
+	if (!sync)
+		return (1);
 	if (thsync_death(sync, sync->forks, starting))
 		return (1);
 	i = -1;

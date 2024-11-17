@@ -34,7 +34,8 @@ int	print_sleep_start(long time, t_sotask *task,
 	(void)task;
 	(void)philo;
 	pthread_mutex_lock(thread->acces.instance);
-	soprintf("%ld \t%d\tis sleeping\n", time, thread->id + 1);
+	if (!*thread->acces.locked)
+		soprintf("%ld \t%d\tis sleeping\n", time, thread->id + 1);
 	pthread_mutex_unlock(thread->acces.instance);
 	return (0);
 }
@@ -56,7 +57,8 @@ int	print_think_start(long time, t_sotask *task,
 	(void)task;
 	(void)philo;
 	pthread_mutex_lock(thread->acces.instance);
-	soprintf("%ld \t%d\tis thinking\n", time, thread->id + 1);
+	if (!*thread->acces.locked)
+		soprintf("%ld \t%d\tis thinking\n", time, thread->id + 1);
 	pthread_mutex_unlock(thread->acces.instance);
 	return (0);
 }

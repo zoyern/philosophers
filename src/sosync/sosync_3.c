@@ -43,6 +43,8 @@ void	thsync_finish(t_sothsync *sync, int id, t_mutex *mutex)
 {
 	t_fork	*fork;
 
+	if (!mutex && !mutex[id].data)
+		return ;
 	fork = mutex[id].data;
 	if (fork && fork->finish)
 		thsync_unlock(sync, id, mutex);
