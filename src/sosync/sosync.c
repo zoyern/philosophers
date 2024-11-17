@@ -16,11 +16,13 @@
 int	thsync_syncro(t_sothsync *sync, long starting)
 {
 	int	i;
+	int	ret;
 
 	if (!sync)
 		return (1);
-	if (thsync_death(sync, sync->forks, starting))
-		return (1);
+	ret = thsync_death(sync, sync->forks, starting);
+	if (ret)
+		return (ret);
 	i = -1;
 	while (++i < sync->nbr)
 		pthread_mutex_lock(sync->forks[i].instance);
@@ -90,7 +92,7 @@ void	*sothsync_routine(void *arg)
 {
 	t_sothsync	*sync;
 	long		starting;
-	int			value;
+	int			ret;
 
 	sync = (t_sothsync *)arg;
 	pthread_mutex_lock(sync->acces.instance);
@@ -98,13 +100,13 @@ void	*sothsync_routine(void *arg)
 	pthread_mutex_unlock(sync->start);
 	starting = get_millis();
 	*sync->acces.starting = starting;
-	value = *sync->acces.locked;
 	pthread_mutex_unlock(sync->acces.instance);
-	while (!value)
+	ret = 0;
+	while (1)
 	{
-		if (thsync_syncro(sync, starting))
+		ret = thsync_syncro(sync, starting);
+		if (ret > 0)
 			break ;
-		value = *(int *)mutget(sync->acces, sync->acces.locked);
 	}
 	pthread_mutex_lock(sync->acces.instance);
 	*(int *)(sync->acces.data) = 1;

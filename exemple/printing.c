@@ -12,9 +12,10 @@
 
 #include "exemple.h"
 
-int	print_died(long time, int id)
+int	print_died(long time, int id, t_sothsync *sync)
 {
-	soprintf("%ld \t%d\tdied\n", time, id + 1);
+	if (!*sync->acces.locked)
+		soprintf("%ld \t%d\tdied\n", time, id + 1);
 	return (0);
 }
 

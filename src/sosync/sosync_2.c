@@ -20,6 +20,14 @@ long	get_millis(void)
 	return ((time.tv_sec * 1000) + (time.tv_usec / 1000));
 }
 
+int	multiple_unlock(t_sothsync *sync, t_mutex *mutex, int id, int ret)
+{
+	*sync->acces.locked = 1;
+	pthread_mutex_unlock(sync->acces.instance);
+	pthread_mutex_unlock(mutex[id].instance);
+	return (ret);
+}
+
 t_sothread	*sonew_thread(t_sothsync *sync, int (*callback)(),
 		int (*calldeath)(), void *data)
 {

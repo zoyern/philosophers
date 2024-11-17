@@ -24,5 +24,6 @@ int			thsync_death(t_sothsync *sync, t_mutex *mutex, long time);
 int			protect_modulo(int nbr, int mod);
 void		thsync_lock(t_sothsync *sync, int id, t_mutex *mutex, long time);
 void		thsync_unlock(t_sothsync *sync, int id, t_mutex *mutex);
+int			multiple_unlock(t_sothsync *sync, t_mutex *mutex, int id, int ret);
 
 #endif

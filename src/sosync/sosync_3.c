@@ -81,14 +81,13 @@ int	thsync_death(t_sothsync *sync, t_mutex *mutex, long starting)
 		fork = mutex[i].data;
 		if (fork->stop < 0
 			|| (get_millis() - starting > fork->death && !fork->stop))
-			return (*sync->acces.locked = 1, thsync_calldeath(sync, i,
+			return (fork->stop = 1, thsync_calldeath(sync, i,
 					get_millis() - starting),
-				pthread_mutex_unlock(sync->acces.instance),
-				pthread_mutex_unlock(mutex[i].instance), 1);
+				multiple_unlock(sync, mutex, i, -1));
 		if (fork->stop)
 			count++;
 		if (count == sync->nbr)
-			*sync->acces.locked = 1;
+			return (multiple_unlock(sync, mutex, i, 1));
 		pthread_mutex_unlock(sync->acces.instance);
 		pthread_mutex_unlock(mutex[i].instance);
 	}

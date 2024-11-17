@@ -35,11 +35,17 @@ int	wait_sothread(t_sothsync *sync, int (*callback)(), void *data)
 	return (value);
 }
 
-void	correct_delay(t_sothread *thread, t_fork *fork, long delay)
+long	correct_delay(t_sothread *thread, t_fork *fork)
 {
+	long	delay;
+	long	starting;
+
+	starting = *(long *)mutget(thread->acces, thread->acces.starting);
+	delay = get_millis() - starting;
 	fork->death += delay;
 	fork->timeout += delay;
 	pthread_mutex_unlock(thread->fork.instance);
+	return (starting);
 }
 
 int	get_work(t_sothread *thread, t_fork *fork, long starting)
@@ -67,15 +73,12 @@ void	*sothread_routine(void	*arg)
 {
 	t_sothread	*thread;
 	long		starting;
-	long		spawn_point;
 
 	thread = (t_sothread *)arg;
 	pthread_mutex_lock(thread->fork.instance);
 	if (thread->id == thread->nbr - 1)
 		pthread_mutex_unlock(thread->start);
-	starting = *(long *)mutget(thread->acces, thread->acces.starting);
-	spawn_point = get_millis() - starting;
-	correct_delay(thread, thread->fork.data, spawn_point);
+	starting = correct_delay(thread, thread->fork.data);
 	while (1)
 	{
 		if ((*(int *)mutget(thread->acces, thread->acces.locked)))
@@ -89,5 +92,8 @@ void	*sothread_routine(void	*arg)
 			pthread_mutex_unlock(thread->fork.instance);
 		}
 	}
+	pthread_mutex_lock(thread->fork.instance);
+	sothread_close(thread, 1);
+	pthread_mutex_unlock(thread->fork.instance);
 	return (NULL);
 }

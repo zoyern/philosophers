@@ -26,7 +26,7 @@ typedef struct s_philo
 	t_sotasks	**tasks;
 }	t_philo;
 
-int	print_died(long time, int id);
+int	print_died(long time, int id, t_sothsync *sync);
 int	routine(t_sothread *thread, t_philo *philo);
 int	print_sleep_start(long time, t_sotask *task,
 		t_philo *philo, t_sothread *thread);
